@@ -1,0 +1,14 @@
+# Konfigurasi rahasia
+.env
+.env.*
+!.env.example
+
+# Dependensi
+/vendor/
+/node_modules/
+
+# Log dan file sementara
+*.log
+*.bak
+.DS_Store
+Thumbs.db

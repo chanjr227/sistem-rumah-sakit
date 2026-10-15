@@ -1,0 +1,1210 @@
+/* =========================================
+   RS MEDIKA SEHAT — PATIENT LOGIN
+   Modern medical interface
+   ========================================= */
+
+:root {
+  --patient-primary: #1769d2;
+  --patient-primary-dark: #124da5;
+  --patient-cyan: #58c7e9;
+  --patient-ink: #172b4d;
+  --patient-muted: #718096;
+  --patient-border: #e2eaf4;
+  --patient-surface: #ffffff;
+  --patient-background: #f3f7fc;
+  --patient-danger: #c73745;
+  --patient-radius: 20px;
+  --patient-font: "DM Sans", "Plus Jakarta Sans", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
+body.patient-page {
+  min-height: 100vh;
+  margin: 0;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(88, 199, 233, 0.12), transparent 28%),
+    radial-gradient(
+      circle at 92% 90%,
+      rgba(23, 105, 210, 0.09),
+      transparent 28%
+    ),
+    var(--patient-background);
+  color: var(--patient-ink);
+  font-family: var(--patient-font);
+  -webkit-font-smoothing: antialiased;
+}
+
+.patient-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.patient-page button,
+.patient-page input {
+  font: inherit;
+}
+
+/* =========================================
+   MAIN LAYOUT
+   ========================================= */
+
+.patient-auth-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+  width: min(1120px, 100%);
+  min-height: 690px;
+  overflow: hidden;
+  border: 1px solid rgba(222, 232, 245, 0.9);
+  border-radius: 30px;
+  background: var(--patient-surface);
+  box-shadow:
+    0 30px 90px rgba(29, 57, 99, 0.09),
+    0 5px 18px rgba(29, 57, 99, 0.04);
+  animation: patientPageEnter 0.75s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+/* =========================================
+   LEFT VISUAL PANEL
+   ========================================= */
+
+.patient-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 36px 38px 28px;
+  overflow: hidden;
+  color: #ffffff;
+  background:
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(113, 216, 246, 0.28),
+      transparent 32%
+    ),
+    linear-gradient(145deg, #124da5 0%, #1769d2 48%, #1689bc 100%);
+}
+
+.patient-visual::before,
+.patient-visual::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 50%;
+}
+
+.patient-visual::before {
+  top: 20%;
+  left: -180px;
+  width: 430px;
+  height: 430px;
+}
+
+.patient-visual::after {
+  right: -200px;
+  bottom: 5%;
+  width: 450px;
+  height: 450px;
+}
+
+.patient-brand {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 12px;
+  animation: patientFadeUp 0.65s 0.1s both;
+}
+
+.patient-brand-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 8px 24px rgba(5, 35, 92, 0.13);
+}
+
+.patient-brand-icon svg {
+  width: 34px;
+  height: 34px;
+}
+
+.patient-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.patient-brand-text strong {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.45px;
+}
+
+.patient-brand-text small {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.patient-visual-content {
+  position: relative;
+  z-index: 1;
+  margin-top: 50px;
+}
+
+.patient-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.19);
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  backdrop-filter: blur(10px);
+}
+
+.patient-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9ff4c7;
+  box-shadow: 0 0 0 4px rgba(159, 244, 199, 0.12);
+  animation: patientPulse 2.1s ease-in-out infinite;
+}
+
+.patient-visual-content h2 {
+  margin: 23px 0 15px;
+  color: #ffffff;
+  font-size: clamp(29px, 3.1vw, 39px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -1.7px;
+  animation: patientFadeUp 0.75s 0.2s both;
+}
+
+.patient-visual-content h2 span {
+  color: #a8edff;
+}
+
+.patient-visual-content > p {
+  max-width: 350px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 13px;
+  line-height: 1.9;
+  animation: patientFadeUp 0.75s 0.3s both;
+}
+
+/* Ilustrasi medis CSS + SVG */
+
+.patient-illustration {
+  position: relative;
+  display: grid;
+  min-height: 235px;
+  margin-top: 12px;
+  place-items: center;
+  isolation: isolate;
+}
+
+.illustration-orbit {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.orbit-one {
+  width: 200px;
+  height: 200px;
+  animation: patientOrbit 24s linear infinite;
+}
+
+.orbit-two {
+  width: 265px;
+  height: 265px;
+  border-style: dashed;
+  opacity: 0.7;
+  animation: patientOrbit 35s linear infinite reverse;
+}
+
+.illustration-cross {
+  width: 155px;
+  filter: drop-shadow(0 22px 35px rgba(6, 40, 96, 0.22));
+  animation: patientFloat 4s ease-in-out infinite;
+}
+
+.illustration-cross svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.illustration-card {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--patient-ink);
+  box-shadow: 0 12px 30px rgba(8, 40, 90, 0.15);
+  animation: patientFloat 4.5s ease-in-out infinite;
+}
+
+.illustration-card strong,
+.illustration-card small {
+  display: block;
+  white-space: nowrap;
+}
+
+.illustration-card strong {
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.illustration-card small {
+  margin-top: 3px;
+  color: var(--patient-muted);
+  font-size: 9px;
+}
+
+.illustration-card-left {
+  top: 29px;
+  left: -3px;
+}
+
+.illustration-card-right {
+  right: -5px;
+  bottom: 26px;
+  animation-delay: -2s;
+}
+
+.illustration-mini-icon,
+.illustration-check {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.illustration-mini-icon {
+  background: #e6f4ff;
+  color: #1769d2;
+}
+
+.illustration-check {
+  background: #e0f8ec;
+  color: #16885d;
+}
+
+.patient-visual-footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-top: 19px;
+  border-top: 1px solid rgba(255, 255, 255, 0.17);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 11px;
+}
+
+.footer-shield {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #b9f5df;
+  font-weight: 800;
+}
+
+/* =========================================
+   RIGHT FORM PANEL
+   ========================================= */
+
+.patient-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 40px 54px;
+  background: #ffffff;
+}
+
+.patient-form-container {
+  width: 100%;
+  max-width: 390px;
+  animation: patientFadeUp 0.7s 0.15s both;
+}
+
+.patient-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 44px;
+  color: #72819a !important;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.patient-back-link span {
+  font-size: 17px;
+  transition: transform 0.2s ease;
+}
+
+.patient-back-link:hover {
+  color: var(--patient-primary) !important;
+}
+
+.patient-back-link:hover span {
+  transform: translateX(-4px);
+}
+
+.patient-mobile-brand {
+  display: none;
+}
+
+.patient-form-heading {
+  margin-bottom: 29px;
+}
+
+.patient-heading-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 16px;
+  color: var(--patient-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.heading-label-line {
+  width: 23px;
+  height: 2px;
+  border-radius: 3px;
+  background: var(--patient-cyan);
+}
+
+.patient-form-heading h1 {
+  margin: 0;
+  color: var(--patient-ink);
+  font-size: clamp(28px, 3vw, 35px);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -1.5px;
+}
+
+.patient-form-heading h1 > span {
+  color: var(--patient-primary);
+}
+
+.patient-form-heading > p {
+  max-width: 360px;
+  margin: 12px 0 0;
+  color: var(--patient-muted);
+  font-size: 12.5px;
+  line-height: 1.85;
+}
+
+/* =========================================
+   ERROR ALERT
+   ========================================= */
+
+.patient-alert.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 0 0 23px;
+  padding: 13px 15px;
+  border: 1px solid #f5c8cc;
+  border-radius: 12px;
+  background: #fff5f5;
+  color: var(--patient-danger);
+  font-size: 11.5px;
+  line-height: 1.7;
+  animation: patientAlertIn 0.4s ease both;
+}
+
+.alert-icon {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 50%;
+  background: #fde2e4;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* =========================================
+   FORM FIELDS
+   ========================================= */
+
+.patient-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.patient-field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  color: var(--patient-ink);
+}
+
+.patient-field-label {
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.patient-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 53px;
+  padding: 0 15px;
+  border: 1px solid var(--patient-border);
+  border-radius: 13px;
+  background: #fbfcfe;
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.patient-input-wrap:hover {
+  border-color: #c4d7ed;
+  background: #ffffff;
+}
+
+.patient-input-wrap:focus-within {
+  border-color: var(--patient-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(23, 105, 210, 0.09);
+  transform: translateY(-1px);
+}
+
+.field-icon {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  color: #8b9bb2;
+  transition: color 0.2s ease;
+}
+
+.patient-input-wrap:focus-within .field-icon {
+  color: var(--patient-primary);
+}
+
+.patient-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  height: 51px;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--patient-ink);
+  font-size: 12px;
+}
+
+.patient-input-wrap input::placeholder {
+  color: #a6b2c3;
+  opacity: 1;
+}
+
+.patient-input-wrap input:-webkit-autofill,
+.patient-input-wrap input:-webkit-autofill:hover,
+.patient-input-wrap input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--patient-ink);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Show/hide password */
+
+.password-toggle {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  padding: 7px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #8b9bb2;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.password-toggle:hover {
+  background: #edf4ff;
+  color: var(--patient-primary);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--patient-primary);
+  outline-offset: 2px;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* =========================================
+   SUBMIT BUTTON
+   ========================================= */
+
+.patient-submit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 54px;
+  margin-top: 5px;
+  padding: 0 20px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 13px;
+  background: linear-gradient(110deg, #1769d2 0%, #247ee6 55%, #1889c8 100%);
+  color: #ffffff;
+  box-shadow: 0 9px 22px rgba(23, 105, 210, 0.22);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    filter 0.22s ease;
+}
+
+.patient-submit::before {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 70%;
+  height: 100%;
+  content: "";
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+  transition: left 0.65s ease;
+}
+
+.patient-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 13px 27px rgba(23, 105, 210, 0.3);
+  filter: saturate(1.08);
+}
+
+.patient-submit:hover::before {
+  left: 130%;
+}
+
+.patient-submit:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.patient-submit:focus-visible {
+  outline: 3px solid rgba(23, 105, 210, 0.35);
+  outline-offset: 4px;
+}
+
+.submit-arrow {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.22s ease;
+}
+
+.patient-submit:hover .submit-arrow {
+  transform: translateX(4px);
+}
+
+.submit-loader {
+  display: none;
+  width: 17px;
+  height: 17px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: patientSpin 0.7s linear infinite;
+}
+
+.patient-submit.is-loading {
+  cursor: wait;
+  pointer-events: none;
+  background: linear-gradient(110deg, #1455ac, #1769d2);
+}
+
+.patient-submit.is-loading .submit-loader {
+  display: inline-block;
+}
+
+.patient-submit.is-loading .submit-arrow {
+  display: none;
+}
+
+/* =========================================
+   REGISTER + PRIVACY
+   ========================================= */
+
+.patient-form-divider {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 26px 0 17px;
+}
+
+.patient-form-divider > span {
+  height: 1px;
+  flex: 1;
+  background: #e9eef5;
+}
+
+.patient-form-divider small {
+  color: #97a3b5;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.patient-register-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 49px;
+  border: 1px solid #dbe7f5;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--patient-primary) !important;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.22s ease;
+}
+
+.patient-register-link span {
+  font-size: 15px;
+  transition: transform 0.22s ease;
+}
+
+.patient-register-link:hover {
+  transform: translateY(-1px);
+  border-color: #b8d3f5;
+  background: #f5f9ff;
+}
+
+.patient-register-link:hover span {
+  transform: translate(2px, -2px);
+}
+
+.patient-privacy-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 29px 0 0;
+  color: #9aa7b8;
+  font-size: 10px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.patient-privacy-note span {
+  font-size: 16px;
+}
+
+/* =========================================
+   ANIMATIONS
+   ========================================= */
+
+@keyframes patientPageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes patientFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(13px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes patientFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes patientOrbit {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes patientPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(159, 244, 199, 0.12);
+  }
+
+  50% {
+    box-shadow: 0 0 0 7px rgba(159, 244, 199, 0.05);
+  }
+}
+
+@keyframes patientSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes patientAlertIn {
+  from {
+    opacity: 0;
+    transform: translateY(-7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================
+   RESPONSIVE — TABLET
+   ========================================= */
+
+@media (max-width: 1000px) {
+  body.patient-page {
+    padding: 20px;
+  }
+
+  .patient-auth-wrap {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    min-height: 640px;
+  }
+
+  .patient-visual {
+    padding: 30px 25px 24px;
+  }
+
+  .patient-visual-content h2 {
+    font-size: 31px;
+  }
+
+  .patient-form-side {
+    padding: 35px 32px;
+  }
+
+  .illustration-card-left {
+    left: -4px;
+  }
+
+  .illustration-card-right {
+    right: -4px;
+  }
+}
+
+/* =========================================
+   RESPONSIVE — MOBILE
+   ========================================= */
+
+@media (max-width: 720px) {
+  body.patient-page {
+    display: block;
+    padding: 0;
+    background: #ffffff;
+  }
+
+  .patient-auth-wrap {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .patient-visual {
+    display: none;
+  }
+
+  .patient-form-side {
+    display: block;
+    flex: 1;
+    padding: 25px 25px 34px;
+  }
+
+  .patient-form-container {
+    max-width: 440px;
+    margin: 0 auto;
+  }
+
+  .patient-back-link {
+    margin-bottom: 29px;
+  }
+
+  .patient-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 39px;
+    color: var(--patient-ink);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+  }
+
+  .mobile-brand-icon {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1769d2, #1889c8);
+    box-shadow: 0 6px 16px rgba(23, 105, 210, 0.2);
+    color: #ffffff;
+    font-size: 27px;
+    line-height: 1;
+  }
+
+  .patient-form-heading {
+    margin-bottom: 27px;
+  }
+
+  .patient-form-heading h1 {
+    font-size: 31px;
+  }
+
+  .patient-form-heading > p {
+    font-size: 12.5px;
+  }
+
+  .patient-form {
+    gap: 20px;
+  }
+
+  .patient-input-wrap {
+    min-height: 55px;
+  }
+
+  .patient-input-wrap input {
+    height: 53px;
+  }
+
+  .patient-submit {
+    min-height: 55px;
+  }
+
+  .patient-privacy-note {
+    margin-top: 31px;
+  }
+}
+
+/* =========================================
+   RESPONSIVE — SMALL MOBILE
+   ========================================= */
+
+@media (max-width: 380px) {
+  .patient-form-side {
+    padding-right: 19px;
+    padding-left: 19px;
+  }
+
+  .patient-mobile-brand {
+    margin-bottom: 30px;
+  }
+
+  .patient-form-heading h1 {
+    font-size: 28px;
+  }
+
+  .patient-back-link {
+    margin-bottom: 24px;
+  }
+}
+
+/* =========================================
+   REGISTER PAGE — OVERRIDES
+   ========================================= */
+
+.patient-register-wrap {
+  min-height: 820px;
+}
+
+.patient-register-side {
+  align-items: flex-start;
+  padding-top: 34px;
+  padding-bottom: 30px;
+}
+
+.patient-register-container {
+  max-width: 410px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.patient-register-container .patient-back-link {
+  margin-bottom: 27px;
+}
+
+.patient-register-container .patient-form-heading {
+  margin-bottom: 23px;
+}
+
+.patient-register-container .patient-form-heading h1 {
+  font-size: clamp(28px, 2.7vw, 34px);
+}
+
+.patient-register-form {
+  gap: 15px;
+}
+
+.patient-register-form .patient-field {
+  gap: 7px;
+}
+
+.patient-register-form .patient-input-wrap {
+  min-height: 48px;
+  border-radius: 11px;
+}
+
+.patient-register-form .patient-input-wrap input {
+  height: 46px;
+  font-size: 12px;
+}
+
+.patient-register-form .patient-field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.optional-label {
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.patient-register-form .patient-submit {
+  min-height: 51px;
+  margin-top: 4px;
+}
+
+/* Indikator kekuatan kata sandi */
+
+.password-strength {
+  display: block;
+  margin-top: 2px;
+}
+
+.strength-track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.strength-fill {
+  height: 4px;
+  border-radius: 10px;
+  background: #e7edf5;
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+.strength-fill.active {
+  animation: strengthReveal 0.25s ease both;
+}
+
+.strength-fill.level-1 {
+  background: #e55c5c;
+}
+
+.strength-fill.level-2 {
+  background: #f0ad4e;
+}
+
+.strength-fill.level-3 {
+  background: #3c9be8;
+}
+
+.strength-fill.level-4 {
+  background: #20a675;
+}
+
+.strength-text {
+  display: block;
+  margin-top: 7px;
+  color: #8a98ac;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.password-match {
+  display: block;
+  min-height: 0;
+  margin-top: 1px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.password-match:empty {
+  display: none;
+}
+
+.password-match.match-success {
+  color: #16845f;
+}
+
+.password-match.match-error {
+  color: #c73745;
+}
+
+@keyframes strengthReveal {
+  from {
+    opacity: 0.45;
+    transform: scaleX(0.7);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Ruang ekstra untuk lima input pada layar kecil */
+
+@media (max-width: 720px) {
+  .patient-register-wrap {
+    min-height: 100vh;
+  }
+
+  .patient-register-side {
+    padding-top: 23px;
+    padding-bottom: 32px;
+  }
+
+  .patient-register-container .patient-back-link {
+    margin-bottom: 23px;
+  }
+
+  .patient-register-container .patient-mobile-brand {
+    margin-bottom: 27px;
+  }
+
+  .patient-register-container .patient-form-heading {
+    margin-bottom: 23px;
+  }
+
+  .patient-register-form {
+    gap: 17px;
+  }
+
+  .patient-register-form .patient-input-wrap {
+    min-height: 51px;
+  }
+
+  .patient-register-form .patient-input-wrap input {
+    height: 49px;
+  }
+
+  .patient-register-container .patient-privacy-note {
+    margin-top: 25px;
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
