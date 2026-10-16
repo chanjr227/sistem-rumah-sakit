@@ -70,4 +70,45 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
+
+  // SUBMENU SIDEBAR
+  const navGroups = document.querySelectorAll("[data-nav-group]");
+
+  navGroups.forEach((group) => {
+    const button = group.querySelector("[data-submenu-toggle]");
+
+    if (!button) return;
+
+    // Submenu Dokter terbuka otomatis pada halaman dashboard dokter.
+    group.classList.add("open");
+    button.setAttribute("aria-expanded", "true");
+
+    button.addEventListener("click", () => {
+      const isOpen = group.classList.toggle("open");
+
+      button.setAttribute("aria-expanded", String(isOpen));
+    });
+  });
+
+  // Tandai submenu sesuai bagian halaman yang dipilih.
+  const submenuLinks = document.querySelectorAll(".admin-submenu-link");
+
+  function updateActiveSubmenu() {
+    const currentHash = window.location.hash;
+
+    submenuLinks.forEach((link) => {
+      link.classList.remove("active");
+    });
+
+    const matchingLink = Array.from(submenuLinks).find((link) => {
+      return currentHash && link.hash === currentHash;
+    });
+
+    if (matchingLink) {
+      matchingLink.classList.add("active");
+    }
+  }
+
+  updateActiveSubmenu();
+  window.addEventListener("hashchange", updateActiveSubmenu);
 });

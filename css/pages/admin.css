@@ -176,60 +176,105 @@
   gap: 7px;
 }
 
-.admin-sidebar-nav a {
+.admin-sidebar-nav > a,
+.admin-nav-parent {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   min-height: 46px;
   padding: 12px 14px;
   border: 1px solid transparent;
   border-radius: 11px;
+  background: transparent;
   color: #c1d1da;
+  font: inherit;
   font-size: 13px;
   font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
   transition:
-    background 0.2s,
-    color 0.2s;
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
-/* Ikon sederhana menggunakan CSS */
-.admin-sidebar-nav a::before {
-  display: inline-flex;
-  justify-content: center;
-  width: 20px;
-  font-size: 16px;
-}
-
-.admin-sidebar-nav a[href="#dashboard"]::before {
-  content: "⌂";
-}
-
-.admin-sidebar-nav a[href="#doctor-form"]::before {
-  content: "+";
-}
-
-.admin-sidebar-nav a[href="#doctor-list"]::before {
-  content: "▤";
-}
-
-.admin-sidebar-nav a:hover {
+.admin-sidebar-nav > a:hover,
+.admin-nav-parent:hover {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
 }
 
-.admin-sidebar-nav a[aria-current="page"],
-.admin-sidebar-nav a.active {
-  background: #087f8c;
+.admin-sidebar-nav > a.active,
+.admin-nav-parent.active {
+  background: var(--admin-primary);
   color: #fff;
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.12);
+}
+
+.admin-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+  font-size: 17px;
+}
+
+.admin-nav-text {
+  flex: 1;
+}
+
+.admin-nav-arrow {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.admin-nav-group.open .admin-nav-arrow {
+  transform: rotate(180deg);
+}
+
+.admin-submenu {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 5px 0 5px 32px;
+}
+
+.admin-nav-group.open .admin-submenu {
+  display: flex;
+}
+
+.admin-sidebar-nav .admin-submenu-link {
+  display: block;
+  min-height: auto;
+  padding: 10px 12px;
+  border: 0;
+  border-left: 2px solid rgba(193, 209, 218, 0.25);
+  border-radius: 0 8px 8px 0;
+  background: transparent;
+  color: #b8cbd4;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.admin-sidebar-nav .admin-submenu-link::before {
+  content: none;
+}
+
+.admin-sidebar-nav .admin-submenu-link:hover,
+.admin-sidebar-nav .admin-submenu-link.active {
+  border-left-color: #62d9ff;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
 }
 
 .admin-sidebar-home {
   margin-top: auto;
   padding: 16px 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   color: #a9c0cb;
   font-size: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .admin-sidebar-home:hover {
@@ -589,6 +634,173 @@
     min-height: calc(100vh - 68px);
   }
 
+  /* MENU UTAMA DENGAN SUBMENU */
+
+  .admin-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .admin-nav-parent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: transparent;
+    color: #c1d1da;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .admin-nav-parent:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .admin-nav-parent.active {
+    background: #087f8c;
+    color: #fff;
+  }
+
+  .admin-nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+    font-size: 17px;
+  }
+
+  .admin-nav-text {
+    flex: 1;
+  }
+
+  .admin-nav-arrow {
+    transition: transform 0.2s ease;
+  }
+
+  .admin-nav-group.open .admin-nav-arrow {
+    transform: rotate(180deg);
+  }
+
+  /* SUBMENU */
+
+  .admin-submenu {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0 5px 38px;
+  }
+
+  .admin-nav-group.open .admin-submenu {
+    display: flex;
+  }
+
+  .admin-submenu-link {
+    display: block;
+    padding: 10px 12px;
+    border-left: 2px solid rgba(193, 209, 218, 0.25);
+    border-radius: 0 8px 8px 0;
+    color: #b8cbd4;
+    font-size: 12px;
+    line-height: 1.5;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .admin-submenu-link:hover,
+  .admin-submenu-link.active {
+    border-left-color: #62d9ff;
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+  }
+
+  @media (max-width: 760px) {
+    .admin-nav-parent {
+      min-height: 46px;
+    }
+
+    .admin-submenu-link {
+      padding-top: 11px;
+      padding-bottom: 11px;
+    }
+  }
+
+  .admin-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .admin-sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    color: #c1d1da;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 10px;
+  }
+
+  .admin-sidebar-nav a:hover,
+  .admin-sidebar-nav a.active {
+    background: #087f8c;
+    color: #fff;
+  }
+
+  .admin-nav-parent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #c1d1da;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .admin-nav-parent:hover,
+  .admin-nav-parent.active {
+    background: #087f8c;
+    color: #fff;
+  }
+
+  .admin-nav-text {
+    flex: 1;
+  }
+
+  .admin-submenu {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 5px 0 5px 24px;
+  }
+
+  .admin-nav-group.open .admin-submenu {
+    display: flex;
+  }
+
+  .admin-submenu-link {
+    font-size: 13px;
+  }
+
   .admin-sidebar {
     position: fixed;
     top: 68px;
@@ -678,6 +890,30 @@
 
   .admin-form-actions .btn {
     width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-sidebar {
+    position: fixed;
+    top: 68px;
+    bottom: 0;
+    left: 0;
+    z-index: 90;
+    width: min(280px, 84vw);
+    min-height: 0;
+    overflow-y: auto;
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition:
+      transform 0.25s ease,
+      visibility 0.25s ease;
+    box-shadow: 12px 0 35px rgba(0, 0, 0, 0.15);
+  }
+
+  .admin-page.sidebar-open .admin-sidebar {
+    transform: translateX(0);
+    visibility: visible;
   }
 }
 
