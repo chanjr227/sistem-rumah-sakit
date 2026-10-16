@@ -199,6 +199,36 @@
     color 0.2s ease;
 }
 
+.admin-sidebar-logout {
+  margin: 0;
+}
+
+.admin-sidebar-logout-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: #c1d1da;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-sidebar-logout-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
 .admin-sidebar-nav > a:hover,
 .admin-nav-parent:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -744,7 +774,8 @@
     gap: 8px;
   }
 
-  .admin-sidebar-nav a {
+  .admin-sidebar-nav a,
+  .admin-sidebar-logout-button {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -924,5 +955,341 @@
   .admin-page *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+} /* =========================================
+   DASHBOARD UTAMA - RS MEDIKA SEHAT
+========================================= */
+
+.admin-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 24px 0;
+}
+
+.admin-stat-card {
+  min-width: 0;
+  padding: 22px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #e5eaf0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.admin-stat-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.admin-stat-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: #e8f7f5;
+  color: #0d9488;
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.admin-stat-label {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-stat-number {
+  margin: 0 0 7px;
+  color: #102a43;
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.admin-stat-description {
+  margin: 0 0 20px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.admin-stat-link {
+  color: #0d827a;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-stat-link:hover {
+  text-decoration: underline;
+}
+
+.admin-dashboard-recent {
+  margin-top: 24px;
+}
+
+.admin-dashboard-recent .admin-page-heading {
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.admin-dashboard-recent .admin-page-heading h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.admin-dashboard-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 24px;
+  padding: 26px;
+  border-radius: 18px;
+  background: #edf8f7;
+  border: 1px solid #d3eeea;
+}
+
+.admin-dashboard-welcome h2 {
+  margin: 0 0 10px;
+  color: #123b42;
+  font-size: 21px;
+}
+
+.admin-dashboard-welcome p:not(.eyebrow) {
+  max-width: 650px;
+  margin: 0;
+  color: #526b70;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+@media (max-width: 1100px) {
+  .admin-dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-stat-card {
+    padding: 18px;
+  }
+
+  .admin-dashboard-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-dashboard-recent .admin-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* =====================================
+   ANIMASI DASHBOARD ADMIN
+===================================== */
+
+.admin-main {
+  animation: dashboardEnter 0.55s ease-out both;
+}
+
+.admin-dashboard-stats .admin-stat-card {
+  opacity: 0;
+  animation: statCardEnter 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.admin-dashboard-stats .admin-stat-card:nth-child(1) {
+  animation-delay: 0.08s;
+}
+
+.admin-dashboard-stats .admin-stat-card:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.admin-dashboard-stats .admin-stat-card:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.admin-dashboard-stats .admin-stat-card:nth-child(4) {
+  animation-delay: 0.32s;
+}
+
+.admin-dashboard-stats .admin-stat-card:hover {
+  transform: translateY(-5px);
+  border-color: #b7e5df;
+  box-shadow: 0 16px 35px rgba(15, 118, 110, 0.1);
+}
+
+.admin-dashboard-recent {
+  animation: sectionEnter 0.65s 0.35s ease both;
+}
+
+.admin-dashboard-welcome {
+  animation: sectionEnter 0.65s 0.45s ease both;
+}
+
+.admin-dashboard-stats .admin-stat-number {
+  animation: numberEnter 0.65s 0.2s ease both;
+}
+
+.admin-dashboard-recent .admin-table tbody tr {
+  animation: rowEnter 0.4s ease both;
+}
+
+.admin-dashboard-recent .admin-table tbody tr:nth-child(1) {
+  animation-delay: 0.12s;
+}
+
+.admin-dashboard-recent .admin-table tbody tr:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.admin-dashboard-recent .admin-table tbody tr:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+.admin-dashboard-recent .admin-table tbody tr:nth-child(4) {
+  animation-delay: 0.36s;
+}
+
+.admin-dashboard-recent .admin-table tbody tr:nth-child(5) {
+  animation-delay: 0.44s;
+}
+
+@keyframes dashboardEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes statCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes numberEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sectionEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rowEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-main,
+  .admin-dashboard-stats .admin-stat-card,
+  .admin-dashboard-recent,
+  .admin-dashboard-welcome,
+  .admin-dashboard-stats .admin-stat-number,
+  .admin-dashboard-recent .admin-table tbody tr {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .admin-dashboard-stats .admin-stat-card {
+    transition: none;
+  }
+}
+
+/* Tabel dokter di dashboard */
+.admin-dashboard-recent .admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.admin-dashboard-recent .admin-table th {
+  padding: 15px 18px;
+  background: #f7fafc;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.admin-dashboard-recent .admin-table td {
+  padding: 18px;
+  border-bottom: 1px solid #edf1f5;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.8;
+  vertical-align: middle;
+}
+
+.admin-dashboard-recent .admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-dashboard-recent .admin-table td strong,
+.admin-dashboard-recent .admin-table td span {
+  display: block;
+}
+
+.admin-dashboard-recent .admin-table td strong {
+  color: #172b4d;
+  font-size: 13px;
+}
+
+.admin-dashboard-recent .admin-table td span {
+  color: #8290a3;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .admin-dashboard-recent .admin-table th,
+  .admin-dashboard-recent .admin-table td {
+    padding: 12px;
   }
 }

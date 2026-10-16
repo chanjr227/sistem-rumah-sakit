@@ -1,0 +1,972 @@
+/* =========================================================
+   RS MEDIKA SEHAT — ADMIN LOGIN MODERN
+   File: css/pages/admin.css
+   ========================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --admin-primary: #0b7775;
+  --admin-primary-dark: #075b5a;
+  --admin-accent: #40d5c0;
+  --admin-ink: #172d3a;
+  --admin-muted: #758591;
+  --admin-border: #e5ecef;
+  --admin-surface: #ffffff;
+  --admin-background: #f1f6f8;
+  --admin-danger: #c43b4d;
+  --admin-shadow: 0 28px 80px rgba(24, 64, 76, 0.13);
+}
+
+/* RESET KHUSUS HALAMAN LOGIN */
+
+body.admin-login-modern {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+  color: var(--admin-ink);
+  background:
+    radial-gradient(
+      circle at 12% 12%,
+      rgba(64, 213, 192, 0.12),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 88%,
+      rgba(11, 119, 117, 0.08),
+      transparent 25%
+    ),
+    var(--admin-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+body.admin-login-modern *,
+body.admin-login-modern *::before,
+body.admin-login-modern *::after {
+  box-sizing: border-box;
+}
+
+body.admin-login-modern a {
+  text-decoration: none;
+}
+
+/* LAYOUT UTAMA */
+
+.admin-login-wrap {
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 36px;
+}
+
+.admin-login-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  width: min(1120px, 100%);
+  min-height: 680px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 28px;
+  background: var(--admin-surface);
+  box-shadow: var(--admin-shadow);
+}
+
+/* =========================================================
+   PANEL KIRI
+   ========================================================= */
+
+.admin-login-visual {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 44px 46px 32px;
+  overflow: hidden;
+  color: #fff;
+  isolation: isolate;
+  background:
+    radial-gradient(
+      ellipse at 90% 15%,
+      rgba(103, 255, 221, 0.25),
+      transparent 36%
+    ),
+    radial-gradient(ellipse at 0% 90%, rgba(0, 47, 62, 0.38), transparent 45%),
+    linear-gradient(145deg, #0d8883 0%, #086e70 48%, #084b61 100%);
+}
+
+.admin-login-visual::before,
+.admin-login-visual::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 50%;
+}
+
+.admin-login-visual::before {
+  width: 410px;
+  height: 410px;
+  right: -155px;
+  top: 190px;
+}
+
+.admin-login-visual::after {
+  width: 320px;
+  height: 320px;
+  right: -108px;
+  top: 235px;
+}
+
+.admin-visual-brand {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 13px;
+  color: #fff;
+}
+
+.admin-visual-logo {
+  display: grid;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.admin-visual-logo svg {
+  display: block;
+  width: 29px;
+  height: 29px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.admin-visual-brand strong,
+.admin-mobile-brand strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.admin-visual-brand small {
+  display: block;
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.69);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+}
+
+.admin-visual-copy {
+  position: relative;
+  z-index: 2;
+  margin-top: 72px;
+}
+
+.admin-visual-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.admin-visual-tag > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #72f5cf;
+  box-shadow: 0 0 12px rgba(114, 245, 207, 0.7);
+}
+
+.admin-visual-copy h1 {
+  max-width: 390px;
+  margin: 24px 0 16px;
+  color: #fff;
+  font-size: clamp(29px, 3vw, 43px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -1.8px;
+}
+
+.admin-visual-copy p {
+  max-width: 360px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+/* ILUSTRASI MEDIS */
+
+.admin-medical-art {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-height: 210px;
+  place-items: center;
+  margin-top: 12px;
+}
+
+.medical-orbit {
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+}
+
+.orbit-one {
+  width: 165px;
+  height: 165px;
+  animation: admin-orbit 24s linear infinite;
+}
+
+.orbit-two {
+  width: 225px;
+  height: 225px;
+  border-style: dashed;
+  animation: admin-orbit 35s linear infinite reverse;
+}
+
+.medical-cross-card {
+  display: grid;
+  width: 108px;
+  height: 108px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 30px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.28),
+    rgba(255, 255, 255, 0.08)
+  );
+  box-shadow:
+    0 20px 55px rgba(0, 36, 49, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(10px);
+  transform: rotate(-8deg);
+}
+
+.medical-cross-card svg {
+  width: 68px;
+  height: 68px;
+  fill: rgba(255, 255, 255, 0.94);
+}
+
+.medical-float-card {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 30px rgba(0, 36, 49, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+.float-card-one {
+  top: 24px;
+  left: 0;
+}
+
+.float-card-two {
+  right: 0;
+  bottom: 25px;
+}
+
+.medical-float-card strong,
+.medical-float-card small {
+  display: block;
+  white-space: nowrap;
+}
+
+.medical-float-card strong {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.medical-float-card small {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+}
+
+.medical-float-icon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.medical-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #72f5cf;
+  box-shadow: 0 0 12px rgba(114, 245, 207, 0.7);
+}
+
+.admin-visual-bottom {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 10px;
+  letter-spacing: 0.4px;
+}
+
+.admin-visual-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+@keyframes admin-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   PANEL KANAN
+   ========================================================= */
+
+.admin-login-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 42px clamp(28px, 5vw, 62px);
+  background: #fff;
+}
+
+.admin-back-link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 9px;
+  margin-bottom: 44px;
+  color: #758591;
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.admin-back-link:hover {
+  color: var(--admin-primary);
+}
+
+.admin-back-link span {
+  font-size: 19px;
+}
+
+.admin-mobile-brand {
+  display: none;
+}
+
+.admin-login-heading {
+  margin-bottom: 28px;
+}
+
+.admin-heading-icon {
+  display: grid;
+  width: 47px;
+  height: 47px;
+  place-items: center;
+  margin-bottom: 22px;
+  border: 1px solid #d5efeb;
+  border-radius: 15px;
+  background: #eaf8f6;
+  color: var(--admin-primary);
+}
+
+.admin-heading-icon svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-login-heading .eyebrow {
+  margin: 0 0 10px;
+  color: var(--admin-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.admin-login-heading h2 {
+  margin: 0;
+  color: #172d3a;
+  font-size: clamp(28px, 3vw, 35px);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -1.3px;
+}
+
+.admin-intro {
+  max-width: 350px;
+  margin: 12px 0 0;
+  color: var(--admin-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* PESAN ERROR */
+
+.admin-alert.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 0 0 22px;
+  padding: 13px 14px;
+  border: 1px solid #f5d4d8;
+  border-radius: 12px;
+  background: #fff5f6;
+  color: var(--admin-danger);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.admin-alert.error > span {
+  display: grid;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fbe1e4;
+  font-weight: 800;
+}
+
+/* FORM LOGIN */
+
+.admin-form-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.admin-form-modern label {
+  display: block;
+  margin: 0 0 9px;
+  color: #354c58;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 54px;
+  margin-bottom: 22px;
+  border: 1px solid #dfe8eb;
+  border-radius: 13px;
+  background: #fbfdfe;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.admin-input-wrap:focus-within {
+  border-color: #2aaba1;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(11, 119, 117, 0.09);
+}
+
+.admin-input-icon {
+  display: grid;
+  flex: 0 0 48px;
+  height: 52px;
+  place-items: center;
+  color: #8a9ca5;
+}
+
+.admin-input-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-input-wrap input {
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  padding: 0 14px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #203943;
+  font-family: inherit;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+.admin-input-wrap input::placeholder {
+  color: #a5b2b9;
+  opacity: 1;
+}
+
+.admin-input-wrap input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.admin-input-wrap input:-webkit-autofill,
+.admin-input-wrap input:-webkit-autofill:hover,
+.admin-input-wrap input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #203943;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.password-toggle {
+  flex: 0 0 auto;
+  margin-right: 13px;
+  padding: 7px 0 7px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--admin-primary);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: var(--admin-primary-dark);
+}
+
+/* TOMBOL MASUK */
+
+.admin-login-modern .admin-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 54px;
+  margin-top: 5px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 13px;
+  background: linear-gradient(110deg, #0b8580, #086b70);
+  box-shadow: 0 9px 20px rgba(11, 119, 117, 0.2);
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.admin-login-modern .admin-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 13px 25px rgba(11, 119, 117, 0.26);
+}
+
+.admin-login-modern .admin-submit:active {
+  transform: translateY(0);
+}
+
+.admin-login-modern .admin-submit:focus-visible,
+.password-toggle:focus-visible,
+.admin-back-link:focus-visible {
+  outline: 3px solid rgba(64, 213, 192, 0.6);
+  outline-offset: 4px;
+}
+
+.admin-submit-arrow {
+  font-size: 18px;
+  font-weight: 400;
+  transition: transform 0.2s ease;
+}
+
+.admin-submit:hover .admin-submit-arrow {
+  transform: translateX(4px);
+}
+
+.admin-submit:disabled {
+  opacity: 0.75;
+  cursor: wait;
+  transform: none;
+}
+
+.admin-submit.is-loading .admin-submit-arrow {
+  display: none;
+}
+
+/* CATATAN KEAMANAN DAN FOOTER */
+
+.admin-security-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 26px;
+  color: #7b8d96;
+  font-size: 10px;
+}
+
+.admin-security-note svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  fill: none;
+  stroke: var(--admin-primary);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-login-footer {
+  margin: 28px 0 0;
+  color: #a0adb4;
+  font-size: 9px;
+  text-align: center;
+}
+
+.admin-login-footer span {
+  padding: 0 4px;
+}
+
+/* =========================================================
+   HALAMAN LOGIN BERHASIL
+   ========================================================= */
+
+.admin-success-wrap {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+}
+
+.admin-success-card {
+  width: min(440px, 100%);
+  padding: 48px 36px;
+  border: 1px solid #e6efef;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: var(--admin-shadow);
+  text-align: center;
+}
+
+.success-check {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  margin: 0 auto 25px;
+  border-radius: 50%;
+  background: #e8f8f3;
+}
+
+.success-check svg {
+  width: 54px;
+  height: 54px;
+  fill: none;
+  stroke: var(--admin-primary);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.success-circle {
+  stroke-dasharray: 145;
+  stroke-dashoffset: 145;
+  animation: admin-draw 0.7s ease forwards;
+}
+
+.success-tick {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: admin-draw 0.45s 0.45s ease forwards;
+}
+
+.admin-success-card .eyebrow {
+  margin: 0 0 12px;
+  color: var(--admin-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+}
+
+.admin-success-card h1 {
+  margin: 0;
+  color: var(--admin-ink);
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.admin-success-card > p:not(.eyebrow) {
+  margin: 13px 0 0;
+  color: var(--admin-muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.success-loading {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 26px;
+}
+
+.success-loading span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--admin-primary);
+  animation: admin-pulse 1s infinite ease-in-out;
+}
+
+.success-loading span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.success-loading span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.success-manual-link {
+  display: inline-block;
+  margin-top: 24px;
+  color: var(--admin-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.success-manual-link:hover {
+  color: var(--admin-primary-dark);
+}
+
+@keyframes admin-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes admin-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
+/* =========================================================
+   RESPONSIVE TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .admin-login-wrap {
+    padding: 22px;
+  }
+
+  .admin-login-shell {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    min-height: 620px;
+  }
+
+  .admin-login-visual {
+    padding: 34px 28px 26px;
+  }
+
+  .admin-visual-copy {
+    margin-top: 58px;
+  }
+
+  .admin-visual-copy h1 {
+    font-size: 31px;
+    letter-spacing: -1.2px;
+  }
+
+  .admin-login-content {
+    padding: 35px 30px;
+  }
+
+  .medical-float-card {
+    gap: 8px;
+    padding: 11px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+  body.admin-login-modern {
+    background: #fff;
+  }
+
+  .admin-login-wrap {
+    display: block;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .admin-login-shell {
+    display: block;
+    width: 100%;
+    min-height: 100vh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .admin-login-visual {
+    display: none;
+  }
+
+  .admin-login-content {
+    min-height: 100vh;
+    justify-content: flex-start;
+    padding: 25px 25px 30px;
+  }
+
+  .admin-mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 38px;
+    color: var(--admin-ink);
+  }
+
+  .admin-mobile-brand .admin-visual-logo {
+    flex-basis: 42px;
+    width: 42px;
+    height: 42px;
+    border-color: #d8efeb;
+    background: #eaf8f6;
+    color: var(--admin-primary);
+  }
+
+  .admin-mobile-brand .admin-visual-logo svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .admin-back-link {
+    order: 2;
+    margin: 30px 0 0;
+  }
+
+  .admin-login-heading {
+    margin-bottom: 27px;
+  }
+
+  .admin-heading-icon {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 19px;
+  }
+
+  .admin-login-heading h2 {
+    font-size: 31px;
+  }
+
+  .admin-intro {
+    font-size: 12px;
+  }
+
+  .admin-input-wrap {
+    min-height: 53px;
+    margin-bottom: 20px;
+  }
+
+  .admin-input-wrap input {
+    height: 51px;
+    font-size: 13px;
+  }
+
+  .admin-login-modern .admin-submit {
+    min-height: 54px;
+  }
+
+  .admin-security-note {
+    margin-top: 24px;
+  }
+
+  .admin-login-footer {
+    margin-top: 28px;
+  }
+
+  .admin-success-card {
+    padding: 38px 24px;
+  }
+}
+
+/* HP KECIL */
+
+@media (max-width: 360px) {
+  .admin-login-content {
+    padding-right: 19px;
+    padding-left: 19px;
+  }
+
+  .admin-mobile-brand {
+    margin-bottom: 30px;
+  }
+
+  .admin-login-heading h2 {
+    font-size: 28px;
+  }
+}
+
+/* PENGGUNA DENGAN PREFERENSI GERAK MINIMAL */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-login-modern *,
+  .admin-login-modern *::before,
+  .admin-login-modern *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

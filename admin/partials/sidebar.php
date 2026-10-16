@@ -5,6 +5,7 @@ $isDoctorPage = in_array(
     ['index.php', 'tambah_dokter.php'],
     true
 );
+$logoutAction = $currentPage === 'tambah_dokter.php' ? '../logout.php' : 'logout.php';
 ?>
 
 <aside class="admin-sidebar" id="adminSidebar">
@@ -41,13 +42,17 @@ $isDoctorPage = in_array(
                     href="tambah_dokter.php"
                     class="admin-submenu-link <?= $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>">
                     Tambah Dokter
-                </a>
+                    <a
+                        href="tambah_dokter.php"
+                        class="admin-submenu-link <?= $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>">
+                        Tambah Dokter
+                    </a>
 
-                <a
-                    href="index.php#doctor-list"
-                    class="admin-submenu-link">
-                    Jadwal Praktik
-                </a>
+                    <a
+                        href="index.php#doctor-list"
+                        class="admin-submenu-link">
+                        Jadwal Praktik
+                    </a>
             </div>
         </div>
     </nav>

@@ -81,7 +81,7 @@ if ($loginSuccess):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b7775">
-    <meta http-equiv="refresh" content="2;url=index.php">
+    <meta http-equiv="refresh" content="2.5;url=index.php">
 
     <title>Login Berhasil - RS Medika Sehat</title>
 
@@ -156,6 +156,7 @@ $csrfToken = adminCsrfToken();
 
   <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/pages/admin.css">
+  <link rel="stylesheet" href="../css/pages/login.css">
 </head>
 
 <body class="admin-page admin-login-modern">

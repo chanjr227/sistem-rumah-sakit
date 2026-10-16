@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../auth.php';
 $csrfToken = adminCsrfToken();
+$logoutAction = basename($_SERVER['PHP_SELF'] ?? '') === 'tambah_dokter.php'
+    ? '../logout.php'
+    : 'logout.php';
 ?>
 
 <header class="admin-header">
@@ -22,7 +25,7 @@ $csrfToken = adminCsrfToken();
             Lihat Beranda
         </a>
 
-        <form method="post" action="logout.php">
+        <form method="post" action="<?= $logoutAction ?>">
             <input
                 type="hidden"
                 name="csrf_token"
