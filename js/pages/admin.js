@@ -111,4 +111,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   updateActiveSubmenu();
   window.addEventListener("hashchange", updateActiveSubmenu);
+
+  // MENU DOKTER TAMBAH DOKTER
+  const addDoctorMenu = document.querySelector("[data-add-doctor-menu]");
+  const doctorForm = document.getElementById("doctor-form");
+
+  if (addDoctorMenu && doctorForm) {
+    addDoctorMenu.addEventListener("click", () => {
+      doctorForm.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
 });

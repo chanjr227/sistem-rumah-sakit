@@ -273,9 +273,10 @@ $formAction = $isEditing ? 'Perbarui Dokter' : 'Tambah Dokter';
               Daftar Dokter
             </a>
 
-            <a href="index.php#doctor-form" class="admin-submenu-link">
+            <a href="dokter/tambah_dokter.php" class="admin-submenu-link">
               Tambah Dokter
             </a>
+
 
             <a href="index.php#doctor-list" class="admin-submenu-link">
               Jadwal Praktik
