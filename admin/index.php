@@ -147,7 +147,7 @@ $statuses = [
           </button>
 
           <div class="admin-submenu" id="doctorSubmenu">
-            <a href="data_dokter.php"
+            <a href="dokter/data_dokter.php"
               class="admin-submenu-link">
               Data Dokter
             </a>

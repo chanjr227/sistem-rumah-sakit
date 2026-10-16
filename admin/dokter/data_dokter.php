@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/auth.php';
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../auth.php';
+require_once __DIR__ . '/../../config/database.php';
 
 requireAdminLogin();
 
@@ -45,9 +45,9 @@ $csrfToken = adminCsrfToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Dokter - RS Medika Sehat</title>
 
-    <link rel="stylesheet" href="../css/base.css">
-    <link rel="stylesheet" href="../css/pages/admin.css">
-    <script src="../js/pages/admin.js" defer></script>
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/pages/admin.css">
+    <script src="../../js/pages/admin.js" defer></script>
 </head>
 
 <body class="admin-page">
@@ -106,7 +106,7 @@ $csrfToken = adminCsrfToken();
                             Data Dokter
                         </a>
 
-                        <a href="dokter/tambah_dokter.php"
+                        <a href="tambah_dokter.php"
                             class="admin-submenu-link">
                             Tambah Dokter
                         </a>

@@ -1,25 +1,27 @@
 <?php
 $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
+
 $isDoctorPage = in_array(
     $currentPage,
-    ['index.php', 'tambah_dokter.php'],
+    ['data_dokter.php', 'tambah_dokter.php'],
     true
 );
-$logoutAction = $currentPage === 'tambah_dokter.php' ? '../logout.php' : 'logout.php';
 ?>
 
 <aside class="admin-sidebar" id="adminSidebar">
     <p class="admin-sidebar-label">Menu Admin</p>
 
     <nav class="admin-sidebar-nav" aria-label="Navigasi dashboard admin">
-        <a
-            href="index.php#dashboard"
-            class="admin-nav-link <?= $currentPage === 'index.php' && !isset($_GET['edit']) ? 'active' : '' ?>">
+
+        <a href="index.php#dashboard"
+            class="admin-nav-link <?= $currentPage === 'index.php' ? 'active' : '' ?>">
             <span class="admin-nav-icon">⌂</span>
             <span>Dashboard</span>
         </a>
 
-        <div class="admin-nav-group <?= $isDoctorPage ? 'open' : '' ?>" data-nav-group>
+        <div class="admin-nav-group <?= $isDoctorPage ? 'open' : '' ?>"
+            data-nav-group>
+
             <button
                 type="button"
                 class="admin-nav-parent <?= $isDoctorPage ? 'active' : '' ?>"
@@ -32,29 +34,25 @@ $logoutAction = $currentPage === 'tambah_dokter.php' ? '../logout.php' : 'logout
             </button>
 
             <div class="admin-submenu" id="doctorSubmenu">
-                <a
-                    href="index.php#doctor-list"
-                    class="admin-submenu-link <?= $currentPage === 'index.php' ? 'active' : '' ?>">
-                    Daftar Dokter
+
+                <a href="data_dokter.php"
+                    class="admin-submenu-link <?= $currentPage === 'data_dokter.php' ? 'active' : '' ?>">
+                    Data Dokter
                 </a>
 
-                <a
-                    href="tambah_dokter.php"
+                <a href="tambah_dokter.php"
                     class="admin-submenu-link <?= $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>">
                     Tambah Dokter
-                    <a
-                        href="tambah_dokter.php"
-                        class="admin-submenu-link <?= $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>">
-                        Tambah Dokter
-                    </a>
+                </a>
 
-                    <a
-                        href="index.php#doctor-list"
-                        class="admin-submenu-link">
-                        Jadwal Praktik
-                    </a>
+                <a href="#jadwal-praktik"
+                    class="admin-submenu-link">
+                    Jadwal Praktik
+                </a>
+
             </div>
         </div>
+
     </nav>
 
     <a class="admin-sidebar-home" href="../index.php">
