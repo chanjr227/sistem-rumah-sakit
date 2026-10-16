@@ -9,6 +9,20 @@
 }
 
 /* MENU LOGIN ADMIN DAN PASIEN */
+
+.login-toggle:hover,
+.login-dropdown.open .login-toggle {
+  background: #e9f7f6;
+}
+
+.login-dropdown.open .login-arrow {
+  transform: rotate(180deg);
+}
+
+/* ==============================
+   DROPDOWN LOGIN ADMIN & PASIEN
+   ============================== */
+
 .login-dropdown {
   position: relative;
   display: inline-flex;
@@ -36,6 +50,7 @@
 }
 
 .login-arrow {
+  display: inline-block;
   transition: transform 0.2s ease;
 }
 
@@ -43,6 +58,7 @@
   transform: rotate(180deg);
 }
 
+/* Menu tertutup secara default */
 .login-menu {
   position: absolute;
   top: calc(100% + 10px);
@@ -54,32 +70,43 @@
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 12px 35px rgba(20, 70, 75, 0.14);
+
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transform: translateY(8px);
-  transition: 0.2s ease;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s ease;
 }
 
-.login-dropdown:hover .login-menu,
-.login-dropdown:focus-within .login-menu,
+/* Menu hanya terbuka saat tombol diklik */
 .login-dropdown.open .login-menu {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   transform: translateY(0);
 }
 
+/* Tautan di dalam menu */
 .login-menu a {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
+  display: block;
+  padding: 12px 14px;
   border-radius: 10px;
   color: var(--text, #183b40);
   text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .login-menu a:hover {
-  background: #f0f8f8;
+  background: #e9f7f6;
+  color: #087f8c;
 }
 
 .login-icon {
