@@ -35,9 +35,9 @@ $isDoctorPage = in_array(
 
             <div class="admin-submenu" id="doctorSubmenu">
 
-                <a href="data_dokter.php"
-                    class="admin-submenu-link <?= $currentPage === 'data_dokter.php' ? 'active' : '' ?>">
-                    Data Dokter
+                <a href="jadwal_dokter.php"
+                    class="admin-submenu-link <?= $currentPage === 'jadwal_dokter.php' ? 'active' : '' ?>">
+                    Jadwal Dokter
                 </a>
 
                 <a href="tambah_dokter.php"
