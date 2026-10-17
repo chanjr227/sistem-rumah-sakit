@@ -43,7 +43,7 @@ $csrfToken = adminCsrfToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Dokter - RS Medika Sehat</title>
+    <title>Jadwal Dokter - RS Medika Sehat</title>
 
     <link rel="stylesheet" href="../../css/base.css">
     <link rel="stylesheet" href="../../css/pages/admin.css">
@@ -101,9 +101,9 @@ $csrfToken = adminCsrfToken();
                     </button>
 
                     <div class="admin-submenu" id="doctorSubmenu">
-                        <a href="data_dokter.php"
+                        <a href="jadwal_dokter.php"
                             class="admin-submenu-link active">
-                            Data Dokter
+                            Jadwal Dokter
                         </a>
 
                         <a href="tambah_dokter.php"
@@ -128,7 +128,7 @@ $csrfToken = adminCsrfToken();
             <div class="admin-page-heading">
                 <div>
                     <p class="eyebrow">Manajemen rumah sakit</p>
-                    <h1>Data Dokter</h1>
+                    <h1>Jadwal Dokter</h1>
                     <p class="admin-intro">
                         Kelola informasi dokter dan jadwal praktik rumah sakit.
                     </p>
