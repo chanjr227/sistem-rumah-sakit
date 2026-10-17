@@ -79,50 +79,7 @@ $csrfToken = adminCsrfToken();
     </header>
 
     <div class="admin-layout">
-        <aside class="admin-sidebar" id="adminSidebar">
-            <p class="admin-sidebar-label">Menu Admin</p>
-
-            <nav class="admin-sidebar-nav" aria-label="Navigasi dashboard admin">
-                <a href="index.php#dashboard" class="admin-nav-link">
-                    <span class="admin-nav-icon">⌂</span>
-                    <span>Dashboard</span>
-                </a>
-
-                <div class="admin-nav-group open" data-nav-group>
-                    <button
-                        type="button"
-                        class="admin-nav-parent active"
-                        aria-expanded="true"
-                        aria-controls="doctorSubmenu"
-                        data-submenu-toggle>
-                        <span class="admin-nav-icon">✚</span>
-                        <span class="admin-nav-text">Dokter</span>
-                        <span class="admin-nav-arrow">⌄</span>
-                    </button>
-
-                    <div class="admin-submenu" id="doctorSubmenu">
-                        <a href="jadwal_dokter.php"
-                            class="admin-submenu-link active">
-                            Jadwal Dokter
-                        </a>
-
-                        <a href="tambah_dokter.php"
-                            class="admin-submenu-link">
-                            Tambah Dokter
-                        </a>
-
-                        <a href="data_dokter.php#jadwal-praktik"
-                            class="admin-submenu-link">
-                            Jadwal Praktik
-                        </a>
-                    </div>
-                </div>
-            </nav>
-
-            <a class="admin-sidebar-home" href="../index.php">
-                Kembali ke beranda
-            </a>
-        </aside>
+        <?php require __DIR__ . '/../partials/sidebar.php'; ?>
 
         <main class="admin-main" id="dashboard">
             <div class="admin-page-heading">
