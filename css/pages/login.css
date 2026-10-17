@@ -453,6 +453,7 @@ body.admin-login-modern a {
   color: var(--admin-danger);
   font-size: 12px;
   line-height: 1.7;
+  animation: admin-error-enter 0.35s ease-out both;
 }
 
 .admin-alert.error > span {
@@ -464,6 +465,35 @@ body.admin-login-modern a {
   border-radius: 50%;
   background: #fbe1e4;
   font-weight: 800;
+  animation: admin-error-mark 0.45s 0.15s ease-in-out both;
+}
+
+@keyframes admin-error-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-error-mark {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  25%,
+  75% {
+    transform: rotate(-12deg);
+  }
+
+  50% {
+    transform: rotate(12deg);
+  }
 }
 
 /* FORM LOGIN */
@@ -473,6 +503,27 @@ body.admin-login-modern a {
   flex-direction: column;
   gap: 0;
   width: 100%;
+}
+
+.admin-form-invalid {
+  animation: admin-form-shake 0.42s ease-in-out both;
+}
+
+@keyframes admin-form-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-7px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(7px);
+  }
 }
 
 .admin-form-modern label {
@@ -968,5 +1019,43 @@ body.admin-login-modern a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Animasi saat login gagal */
+  .admin-form-invalid {
+    animation: admin-login-shake 0.45s ease-in-out;
+  }
+
+  @keyframes admin-login-shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    20%,
+    60% {
+      transform: translateX(-8px);
+    }
+
+    40%,
+    80% {
+      transform: translateX(8px);
+    }
+  }
+
+  .admin-alert.error {
+    animation: admin-login-error 0.4s ease-out;
+  }
+
+  @keyframes admin-login-error {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

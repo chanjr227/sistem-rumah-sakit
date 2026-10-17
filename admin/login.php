@@ -9,6 +9,7 @@ startAdminSession();
 
 $errorMessage = '';
 $loginSuccess = false;
+$invalidCredentials = false;
 
 if (!empty($_SESSION['admin_authenticated'])) {
   header('Location: index.php');
@@ -58,6 +59,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           $loginSuccess = true;
         } else {
           http_response_code(401);
+          $invalidCredentials = true;
           $errorMessage = 'Nama pengguna atau kata sandi tidak sesuai.';
         }
       } catch (PDOException $exception) {
@@ -93,6 +95,7 @@ if ($loginSuccess):
 
     <link rel="stylesheet" href="../css/base.css">
     <link rel="stylesheet" href="../css/pages/admin.css">
+    <link rel="stylesheet" href="../css/pages/login.css">
   </head>
 
   <body class="admin-page admin-login-modern">
@@ -266,7 +269,7 @@ $csrfToken = adminCsrfToken();
         <?php endif; ?>
 
         <form
-          class="admin-form admin-form-modern"
+          class="admin-form admin-form-modern<?= $invalidCredentials ? ' admin-form-invalid' : '' ?>"
           method="post"
           action="login.php">
 
@@ -368,9 +371,14 @@ $csrfToken = adminCsrfToken();
     });
 
     loginForm.addEventListener('submit', () => {
+      if (!loginForm.checkValidity()) {
+        return;
+      }
+
       submitButton.classList.add('is-loading');
       submitButton.querySelector('span:first-child').textContent =
         'Memeriksa akun...';
+
       submitButton.disabled = true;
     });
   </script>
