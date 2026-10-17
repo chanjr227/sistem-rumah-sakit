@@ -18,6 +18,7 @@ $csrfToken = adminCsrfToken();
 $notice = null;
 $isEditing = false;
 $doctorId = null;
+$connection = null;
 
 $doctor = [
     'name' => '',
@@ -27,7 +28,15 @@ $doctor = [
     'end_time' => '',
     'room' => '',
     'status' => 'available',
+    'education' => '',
+    'experience' => '',
+    'biography' => '',
 ];
+
+function tambahDokterEscape(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
 
 function tambahDokterValidTime(string $time): bool
 {
@@ -35,23 +44,26 @@ function tambahDokterValidTime(string $time): bool
     $errors = DateTimeImmutable::getLastErrors();
 
     return $parsed !== false
-        && ($errors === false || (
-            $errors['warning_count'] === 0
-            && $errors['error_count'] === 0
-        ))
+        && (
+            $errors === false
+            || (
+                $errors['warning_count'] === 0
+                && $errors['error_count'] === 0
+            )
+        )
         && $parsed->format('H:i') === $time;
 }
 
 /*
 |--------------------------------------------------------------------------
-| Ambil data dokter untuk proses edit
+| Ambil data dokter saat mode edit
 |--------------------------------------------------------------------------
 */
 
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
+if (
+    ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
     && isset($_GET['edit'])
 ) {
-
     $validatedId = filter_var(
         $_GET['edit'],
         FILTER_VALIDATE_INT,
@@ -59,30 +71,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
     );
 
     if ($validatedId === false) {
-        $notice = [
-            'type' => 'error',
-            'message' => 'ID dokter tidak valid.',
-        ];
+        $notice = 'ID dokter tidak valid.';
     } else {
         try {
             $connection = getDatabaseConnection();
 
             $statement = $connection->prepare(
-                'SELECT id, name, specialty, work_days,
-                        start_time, end_time, room, status
-                 FROM doctors
-                 WHERE id = :id
-                 LIMIT 1'
+                "SELECT
+                    d.id,
+                    d.name,
+                    d.specialty,
+                    d.work_days,
+                    d.start_time,
+                    d.end_time,
+                    d.room,
+                    d.status,
+                    COALESCE(dp.education, '') AS education,
+                    COALESCE(dp.experience, '') AS experience,
+                    COALESCE(dp.biography, '') AS biography
+                 FROM doctors AS d
+                 LEFT JOIN doctor_profiles AS dp
+                    ON dp.doctor_id = d.id
+                 WHERE d.id = :id
+                 LIMIT 1"
             );
 
             $statement->execute(['id' => $validatedId]);
             $result = $statement->fetch();
 
             if (!$result) {
-                $notice = [
-                    'type' => 'error',
-                    'message' => 'Data dokter tidak ditemukan.',
-                ];
+                $notice = 'Data dokter tidak ditemukan.';
             } else {
                 $doctorId = (int) $result['id'];
                 $isEditing = true;
@@ -91,7 +109,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
                     $doctor[$key] = (string) $result[$key];
                 }
 
-                // Database TIME biasanya mengembalikan HH:MM:SS.
                 $doctor['start_time'] = substr(
                     $doctor['start_time'],
                     0,
@@ -105,19 +122,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
                 );
             }
         } catch (PDOException $exception) {
-            error_log('Load doctor error: ' . $exception->getMessage());
+            error_log(
+                'Load doctor error: ' . $exception->getMessage()
+            );
 
-            $notice = [
-                'type' => 'error',
-                'message' => 'Data dokter gagal dimuat.',
-            ];
+            $notice = 'Data dokter gagal dimuat. Periksa struktur database.';
         }
     }
 }
 
 /*
 |--------------------------------------------------------------------------
-| Proses tambah dan edit dokter
+| Proses penyimpanan tambah dan edit dokter
 |--------------------------------------------------------------------------
 */
 
@@ -127,14 +143,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             http_response_code(403);
 
             throw new InvalidArgumentException(
-                'Sesi formulir tidak valid. Muat ulang halaman.'
+                'Sesi formulir tidak valid. Silakan muat ulang halaman.'
             );
         }
 
         /*
-         * Jika ID dikirim, proses harus menjadi edit.
-         * ID yang tidak valid tidak boleh dianggap sebagai tambah baru.
-         */
+        |--------------------------------------------------------------
+        | Validasi ID dokter
+        |--------------------------------------------------------------
+        */
+
         $postedId = $_POST['id'] ?? '';
 
         if (!is_string($postedId)) {
@@ -163,7 +181,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $isEditing = false;
         }
 
-        // Ambil dan pertahankan nilai formulir.
+        /*
+        |--------------------------------------------------------------
+        | Ambil nilai formulir
+        |--------------------------------------------------------------
+        */
+
         foreach ($doctor as $key => $value) {
             $postedValue = $_POST[$key] ?? '';
 
@@ -176,23 +199,28 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             $doctor[$key] = trim($postedValue);
         }
 
-        // Validasi kolom wajib.
-        foreach (
-            [
-                'name' => ['Nama dokter', 255],
-                'specialty' => ['Spesialisasi', 100],
-                'work_days' => ['Hari praktik', 100],
-                'start_time' => ['Jam mulai', 5],
-                'end_time' => ['Jam selesai', 5],
-                'room' => ['Ruang praktik', 100],
-            ] as $key => [$label, $maxLength]
-        ) {
+        /*
+        |--------------------------------------------------------------
+        | Validasi data utama dokter
+        |--------------------------------------------------------------
+        */
+
+        $fields = [
+            'name' => ['Nama dokter', 255],
+            'specialty' => ['Spesialisasi', 100],
+            'work_days' => ['Hari praktik', 100],
+            'start_time' => ['Jam mulai', 5],
+            'end_time' => ['Jam selesai', 5],
+            'room' => ['Ruang praktik', 100],
+        ];
+
+        foreach ($fields as $key => [$label, $maxLength]) {
             if (
                 $doctor[$key] === ''
                 || mb_strlen($doctor[$key], 'UTF-8') > $maxLength
             ) {
                 throw new InvalidArgumentException(
-                    $label . ' wajib diisi, maksimal '
+                    $label . ' wajib diisi dan maksimal '
                         . $maxLength . ' karakter.'
                 );
             }
@@ -204,36 +232,64 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
             );
         }
 
-        $status = $_POST['status'] ?? '';
-
-        if (
-            !is_string($status)
-            || !array_key_exists($status, $statuses)
-        ) {
+        if (!array_key_exists($doctor['status'], $statuses)) {
             throw new InvalidArgumentException(
-                'Status dokter tidak valid.'
+                'Status praktik dokter tidak valid.'
             );
         }
 
-        $doctor['status'] = $status;
-
-        // Validasi jam praktik.
         if (
             !tambahDokterValidTime($doctor['start_time'])
             || !tambahDokterValidTime($doctor['end_time'])
             || $doctor['start_time'] >= $doctor['end_time']
         ) {
             throw new InvalidArgumentException(
-                'Jam praktik tidak valid. Jam selesai harus setelah jam mulai.'
+                'Jam selesai harus setelah jam mulai.'
             );
         }
 
+        /*
+        |--------------------------------------------------------------
+        | Validasi data profil dokter
+        |--------------------------------------------------------------
+        */
+
+        $profileFields = [
+            'education' => ['Pendidikan', 1000],
+            'experience' => ['Pengalaman', 1000],
+            'biography' => ['Biografi', 3000],
+        ];
+
+        foreach ($profileFields as $key => [$label, $maxLength]) {
+            if (
+                mb_strlen($doctor[$key], 'UTF-8') > $maxLength
+            ) {
+                throw new InvalidArgumentException(
+                    $label . ' maksimal '
+                        . $maxLength . ' karakter.'
+                );
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------
+        | Simpan data menggunakan transaksi
+        |--------------------------------------------------------------
+        */
+
         $connection = getDatabaseConnection();
+        $connection->beginTransaction();
 
         if ($isEditing) {
-            // Pastikan dokter memang ada sebelum memperbarui.
+            /*
+             * Pastikan dokter yang akan diedit benar-benar ada.
+             */
+
             $check = $connection->prepare(
-                'SELECT id FROM doctors WHERE id = :id LIMIT 1'
+                'SELECT id
+                 FROM doctors
+                 WHERE id = :id
+                 LIMIT 1'
             );
 
             $check->execute(['id' => $doctorId]);
@@ -243,6 +299,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'Data dokter tidak ditemukan.'
                 );
             }
+
+            /*
+             * Perbarui tabel doctors.
+             */
 
             $statement = $connection->prepare(
                 'UPDATE doctors
@@ -266,19 +326,32 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 'status' => $doctor['status'],
                 'id' => $doctorId,
             ]);
-
-            $_SESSION['admin_notice'] = [
-                'type' => 'success',
-                'message' => 'Data dokter berhasil diperbarui.',
-            ];
         } else {
+            /*
+             * Tambahkan data ke tabel doctors.
+             */
+
             $statement = $connection->prepare(
                 'INSERT INTO doctors
-                    (name, specialty, work_days, start_time,
-                     end_time, room, status)
+                    (
+                        name,
+                        specialty,
+                        work_days,
+                        start_time,
+                        end_time,
+                        room,
+                        status
+                    )
                  VALUES
-                    (:name, :specialty, :work_days, :start_time,
-                     :end_time, :room, :status)'
+                    (
+                        :name,
+                        :specialty,
+                        :work_days,
+                        :start_time,
+                        :end_time,
+                        :room,
+                        :status
+                    )'
             );
 
             $statement->execute([
@@ -291,28 +364,125 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 'status' => $doctor['status'],
             ]);
 
-            $_SESSION['admin_notice'] = [
-                'type' => 'success',
-                'message' => 'Data dokter berhasil ditambahkan.',
-            ];
+            /*
+             * Ambil ID dokter yang baru saja dibuat.
+             */
+
+            $doctorId = (int) $connection->lastInsertId();
         }
 
-        header('Location: ../index.php');
+        /*
+        |--------------------------------------------------------------
+        | Simpan pendidikan, pengalaman, dan biografi
+        | ke tabel doctor_profiles
+        |--------------------------------------------------------------
+        */
+
+        $profileCheck = $connection->prepare(
+            'SELECT id
+             FROM doctor_profiles
+             WHERE doctor_id = :doctor_id
+             LIMIT 1'
+        );
+
+        $profileCheck->execute([
+            'doctor_id' => $doctorId,
+        ]);
+
+        $profileId = $profileCheck->fetchColumn();
+
+        if ($profileId !== false) {
+            /*
+             * Profil sudah ada, jadi perbarui profil tersebut.
+             * Foto dokter tidak diubah.
+             */
+
+            $profileStatement = $connection->prepare(
+                'UPDATE doctor_profiles
+                 SET education = :education,
+                     experience = :experience,
+                     biography = :biography,
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE doctor_id = :doctor_id'
+            );
+        } else {
+            /*
+             * Profil belum ada, jadi buat profil baru.
+             * Kolom photo tidak diubah dan mengikuti default database.
+             */
+
+            $profileStatement = $connection->prepare(
+                'INSERT INTO doctor_profiles
+                    (
+                        doctor_id,
+                        education,
+                        experience,
+                        biography,
+                        created_at,
+                        updated_at
+                    )
+                 VALUES
+                    (
+                        :doctor_id,
+                        :education,
+                        :experience,
+                        :biography,
+                        CURRENT_TIMESTAMP,
+                        CURRENT_TIMESTAMP
+                    )'
+            );
+        }
+
+        $profileStatement->execute([
+            'doctor_id' => $doctorId,
+            'education' => $doctor['education'],
+            'experience' => $doctor['experience'],
+            'biography' => $doctor['biography'],
+        ]);
+
+        /*
+        |--------------------------------------------------------------
+        | Selesaikan transaksi
+        |--------------------------------------------------------------
+        */
+
+        $connection->commit();
+
+        $_SESSION['admin_notice'] = [
+            'type' => 'success',
+            'message' => $isEditing
+                ? 'Data dokter berhasil diperbarui.'
+                : 'Dokter berhasil ditambahkan.',
+        ];
+
+        header('Location: data_dokter.php');
         exit;
     } catch (InvalidArgumentException $exception) {
-        $notice = [
-            'type' => 'error',
-            'message' => $exception->getMessage(),
-        ];
-    } catch (PDOException $exception) {
-        error_log('Save doctor error: ' . $exception->getMessage());
+        if (
+            $connection instanceof PDO
+            && $connection->inTransaction()
+        ) {
+            $connection->rollBack();
+        }
 
-        $notice = [
-            'type' => 'error',
-            'message' => 'Data dokter gagal disimpan. Periksa koneksi database.',
-        ];
+        $notice = $exception->getMessage();
+    } catch (PDOException $exception) {
+        if (
+            $connection instanceof PDO
+            && $connection->inTransaction()
+        ) {
+            $connection->rollBack();
+        }
+
+        error_log(
+            'Save doctor error: ' . $exception->getMessage()
+        );
+
+        $notice = 'Data dokter gagal disimpan. Periksa database dan struktur tabel.';
     }
 }
+
+$pageTitle = $isEditing ? 'Edit Dokter' : 'Tambah Dokter';
 
 ?>
 
@@ -324,7 +494,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
-        <?= $isEditing ? 'Edit Dokter' : 'Tambah Dokter' ?> - RS Medika Sehat
+        <?= tambahDokterEscape($pageTitle) ?> - RS Medika Sehat
     </title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -354,37 +524,46 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 <div>
                     <p class="eyebrow">Manajemen rumah sakit</p>
 
-                    <h1>
-                        <?= $isEditing ? 'Edit Dokter' : 'Tambah Dokter' ?>
-                    </h1>
+                    <h1><?= tambahDokterEscape($pageTitle) ?></h1>
 
                     <p class="admin-intro">
                         <?= $isEditing
-                            ? 'Perbarui informasi dan jadwal praktik dokter.'
-                            : 'Tambahkan informasi dokter baru ke sistem RS Medika Sehat.' ?>
+                            ? 'Perbarui informasi, profil, dan jadwal praktik dokter.'
+                            : 'Masukkan informasi, profil, dan jadwal praktik dokter baru.' ?>
                     </p>
                 </div>
 
-                <a class="btn btn-secondary" href="index.php#doctor-list">
-                    Kembali ke Daftar
+                <a class="btn btn-secondary" href="data_dokter.php">
+                    Kembali ke Data Dokter
                 </a>
             </div>
 
+            <?php if ($notice !== null): ?>
+                <div
+                    class="admin-panel"
+                    role="alert"
+                    style="margin-bottom:20px; border-left:4px solid #dc5353;">
+                    <?= tambahDokterEscape($notice) ?>
+                </div>
+            <?php endif; ?>
+
             <?php require __DIR__ . '/../partials/flash_message.php'; ?>
 
-            <section class="admin-panel" id="doctor-form">
+            <section class="admin-panel">
 
                 <h2>Informasi Dokter</h2>
 
                 <form
                     class="admin-form"
                     method="post"
-                    action="tambah_dokter.php<?= $isEditing && $doctorId !== null ? '?edit=' . $doctorId : '' ?>">
+                    action="tambah_dokter.php<?= $isEditing && $doctorId !== null
+                                                    ? '?edit=' . $doctorId
+                                                    : '' ?>">
 
                     <input
                         type="hidden"
                         name="csrf_token"
-                        value="<?= escapeHtml($csrfToken) ?>">
+                        value="<?= tambahDokterEscape($csrfToken) ?>">
 
                     <?php if ($isEditing && $doctorId !== null): ?>
                         <input
@@ -400,7 +579,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                             name="name"
                             maxlength="255"
                             placeholder="Contoh: dr. Andi Pratama"
-                            value="<?= escapeHtml($doctor['name']) ?>"
+                            value="<?= tambahDokterEscape($doctor['name']) ?>"
                             required>
                     </label>
 
@@ -411,11 +590,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
                             <?php foreach ($specialties as $specialty): ?>
                                 <option
-                                    value="<?= escapeHtml($specialty) ?>"
+                                    value="<?= tambahDokterEscape($specialty) ?>"
                                     <?= $doctor['specialty'] === $specialty
                                         ? 'selected'
                                         : '' ?>>
-                                    <?= escapeHtml($specialty) ?>
+                                    <?= tambahDokterEscape($specialty) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -428,17 +607,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                             name="work_days"
                             maxlength="100"
                             placeholder="Contoh: Senin - Kamis"
-                            value="<?= escapeHtml($doctor['work_days']) ?>"
+                            value="<?= tambahDokterEscape($doctor['work_days']) ?>"
                             required>
                     </label>
 
                     <div class="admin-time-fields">
+
                         <label>
                             Jam mulai
                             <input
                                 type="time"
                                 name="start_time"
-                                value="<?= escapeHtml($doctor['start_time']) ?>"
+                                value="<?= tambahDokterEscape($doctor['start_time']) ?>"
                                 required>
                         </label>
 
@@ -447,9 +627,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                             <input
                                 type="time"
                                 name="end_time"
-                                value="<?= escapeHtml($doctor['end_time']) ?>"
+                                value="<?= tambahDokterEscape($doctor['end_time']) ?>"
                                 required>
                         </label>
+
                     </div>
 
                     <label>
@@ -459,7 +640,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                             name="room"
                             maxlength="100"
                             placeholder="Contoh: J-204"
-                            value="<?= escapeHtml($doctor['room']) ?>"
+                            value="<?= tambahDokterEscape($doctor['room']) ?>"
                             required>
                     </label>
 
@@ -468,24 +649,62 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         <select name="status" required>
                             <?php foreach ($statuses as $value => $label): ?>
                                 <option
-                                    value="<?= escapeHtml($value) ?>"
+                                    value="<?= tambahDokterEscape($value) ?>"
                                     <?= $doctor['status'] === $value
                                         ? 'selected'
                                         : '' ?>>
-                                    <?= escapeHtml($label) ?>
+                                    <?= tambahDokterEscape($label) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </label>
 
+                    <div class="admin-form-section">
+                        <h2>Profil Dokter</h2>
+                        <p class="admin-intro">
+                            Informasi berikut akan ditampilkan pada profil dokter.
+                        </p>
+                    </div>
+
+                    <label>
+                        Pendidikan
+                        <textarea
+                            name="education"
+                            rows="3"
+                            maxlength="1000"
+                            placeholder="Contoh: S1 Kedokteran Universitas Indonesia, Spesialis Jantung"><?= tambahDokterEscape($doctor['education']) ?></textarea>
+                    </label>
+
+                    <label>
+                        Pengalaman
+                        <textarea
+                            name="experience"
+                            rows="3"
+                            maxlength="1000"
+                            placeholder="Contoh: 5 tahun pengalaman di bidang kardiologi"><?= tambahDokterEscape($doctor['experience']) ?></textarea>
+                    </label>
+
+                    <label>
+                        Biografi dokter
+                        <textarea
+                            name="biography"
+                            rows="5"
+                            maxlength="3000"
+                            placeholder="Tuliskan profil singkat, keahlian, dan informasi dokter lainnya."><?= tambahDokterEscape($doctor['biography']) ?></textarea>
+                    </label>
+
                     <div class="admin-form-actions">
+
                         <button class="btn btn-primary" type="submit">
-                            <?= $isEditing ? 'Simpan Perubahan' : 'Simpan Dokter' ?>
+                            <?= $isEditing
+                                ? 'Simpan Perubahan'
+                                : 'Simpan Dokter' ?>
                         </button>
 
-                        <a class="btn btn-secondary" href="index.php#doctor-list">
+                        <a class="btn btn-secondary" href="data_dokter.php">
                             Batal
                         </a>
+
                     </div>
 
                 </form>
