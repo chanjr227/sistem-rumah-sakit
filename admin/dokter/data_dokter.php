@@ -469,7 +469,7 @@ $csrfToken = adminCsrfToken();
                                             <td class="doctor-action">
                                                 <a
                                                     class="btn btn-secondary"
-                                                    href="tambah_dokter.php?edit=<?= (int) $item['id'] ?>">
+                                                    href="tambah_dokter.php?id=<?= (int) $item['id'] ?>">
                                                     Edit
                                                 </a>
                                             </td>

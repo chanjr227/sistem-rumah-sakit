@@ -1292,4 +1292,63 @@
   .admin-dashboard-recent .admin-table td {
     padding: 12px;
   }
+
+  /* Form dokter dengan tampilan putih */
+
+  .doctor-edit-form {
+    background: #ffffff !important;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  }
+
+  .doctor-edit-form .form-group label {
+    color: #334155;
+  }
+
+  .doctor-edit-form .form-group input:not([type="file"]),
+  .doctor-edit-form .form-group select,
+  .doctor-edit-form .form-group textarea {
+    background: #f8fafc;
+    color: #1e293b;
+    border: 1px solid #cbd5e1;
+  }
+
+  .doctor-edit-form .form-group input:focus,
+  .doctor-edit-form .form-group select:focus,
+  .doctor-edit-form .form-group textarea:focus {
+    background: #ffffff;
+    border-color: #0891b2;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
+  }
+
+  .doctor-edit-form .form-group small,
+  .doctor-edit-form .doctor-photo-preview p {
+    color: #64748b;
+  }
+
+  .doctor-edit-form .doctor-section-title {
+    color: #0891b2;
+  }
+
+  .doctor-edit-form .doctor-form-divider,
+  .doctor-edit-form .form-actions {
+    border-color: #e2e8f0;
+  }
+
+  .doctor-edit-form .form-actions .btn-secondary {
+    color: #334155;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+
+  .doctor-edit-form .form-actions .btn-secondary:hover {
+    background: #e2e8f0;
+  }
+
+  .doctor-edit-form .form-group input[type="file"] {
+    color: #334155;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
 }
