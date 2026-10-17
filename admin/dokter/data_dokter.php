@@ -7,30 +7,44 @@ require_once __DIR__ . '/../../config/database.php';
 
 requireAdminLogin();
 
-$statuses = [
+function dataDokterEscape(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+$search = trim((string) ($_GET['search'] ?? ''));
+$statusFilter = (string) ($_GET['status'] ?? '');
+
+$allowedStatuses = [
     'available' => 'Tersedia',
     'busy' => 'Penuh',
 ];
 
-$specialties = [
-    'Jantung',
-    'Anak',
-    'Neurologi',
-    'Bedah',
-    'Umum',
-];
-
-$notice = $_SESSION['admin_notice'] ?? null;
-unset($_SESSION['admin_notice']);
-
-$keyword = trim($_GET['q'] ?? '');
-$specialty = trim($_GET['specialty'] ?? '');
-$status = trim($_GET['status'] ?? '');
+if (!array_key_exists($statusFilter, $allowedStatuses)) {
+    $statusFilter = '';
+}
 
 $doctors = [];
+$errorMessage = null;
+$totalDoctors = 0;
 
 try {
     $connection = getDatabaseConnection();
+
+    $where = [];
+    $params = [];
+
+    if ($search !== '') {
+        $where[] = '(d.name LIKE :search_name
+                     OR d.specialty LIKE :search_specialty)';
+        $params['search_name'] = '%' . $search . '%';
+        $params['search_specialty'] = '%' . $search . '%';
+    }
+
+    if ($statusFilter !== '') {
+        $where[] = 'd.status = :status';
+        $params['status'] = $statusFilter;
+    }
 
     $sql = '
         SELECT
@@ -49,74 +63,29 @@ try {
         FROM doctors AS d
         LEFT JOIN doctor_profiles AS dp
             ON dp.doctor_id = d.id
-        WHERE 1 = 1
     ';
 
-    $params = [];
-
-    if ($keyword !== '') {
-        $sql .= ' AND d.name LIKE :keyword';
-        $params['keyword'] = '%' . $keyword . '%';
-    }
-
-    if (in_array($specialty, $specialties, true)) {
-        $sql .= ' AND d.specialty = :specialty';
-        $params['specialty'] = $specialty;
-    }
-
-    if (array_key_exists($status, $statuses)) {
-        $sql .= ' AND d.status = :status';
-        $params['status'] = $status;
+    if ($where !== []) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
     }
 
     $sql .= ' ORDER BY d.name ASC';
 
-    $stmt = $connection->prepare($sql);
-    $stmt->execute($params);
+    $statement = $connection->prepare($sql);
+    $statement->execute($params);
+    $doctors = $statement->fetchAll();
 
-    $doctors = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $exception) {
-    error_log(
-        'Admin doctor list error: ' . $exception->getMessage()
+    $countStatement = $connection->query(
+        'SELECT COUNT(*) FROM doctors'
     );
-
-    $notice = [
-        'type' => 'error',
-        'message' => 'Daftar dokter tidak dapat dimuat. Periksa koneksi database.',
-    ];
+    $totalDoctors = (int) $countStatement->fetchColumn();
+} catch (PDOException $exception) {
+    error_log('Load doctors list error: ' . $exception->getMessage());
+    $errorMessage = 'Data dokter gagal dimuat. Periksa struktur tabel database.';
 }
 
 $csrfToken = adminCsrfToken();
 
-function doctorEscape(string $value): string
-{
-    return htmlspecialchars(
-        $value,
-        ENT_QUOTES,
-        'UTF-8'
-    );
-}
-
-/**
- * Foto diasumsikan tersimpan sebagai path relatif
- * dari folder utama project, misalnya:
- * uploads/doctors/dokter1.jpg
- */
-function doctorPhotoUrl(?string $photo): ?string
-{
-    if ($photo === null || trim($photo) === '') {
-        return null;
-    }
-
-    $photo = trim($photo);
-
-    // Mendukung URL gambar eksternal atau path absolut.
-    if (preg_match('~^(https?://|/)~i', $photo)) {
-        return $photo;
-    }
-
-    return '../../' . ltrim($photo, '/');
-}
 ?>
 
 <!DOCTYPE html>
@@ -124,121 +93,159 @@ function doctorPhotoUrl(?string $photo): ?string
 
 <head>
     <meta charset="UTF-8">
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Data Dokter - RS Medika Sehat</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="../../css/base.css">
     <link rel="stylesheet" href="../../css/pages/admin.css">
-
     <script src="../../js/pages/admin.js" defer></script>
 
     <style>
-        .doctor-filter-form {
+        .doctor-toolbar {
             display: flex;
-            flex-wrap: wrap;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 22px;
         }
 
-        .doctor-filter-form input,
-        .doctor-filter-form select {
+        .doctor-filters {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .doctor-filters input,
+        .doctor-filters select {
             min-height: 42px;
             padding: 10px 12px;
-            border: 1px solid #dce3ea;
-            border-radius: 9px;
-            background: #fff;
-            color: #263445;
+            border: 1px solid var(--border, #d9e1e8);
+            border-radius: 8px;
             font: inherit;
         }
 
-        .doctor-filter-form input {
+        .doctor-filters input {
+            min-width: 220px;
             flex: 1;
-            min-width: 180px;
+        }
+
+        .doctor-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .doctor-table {
+            width: 100%;
+            min-width: 950px;
+            border-collapse: collapse;
+        }
+
+        .doctor-table th,
+        .doctor-table td {
+            padding: 14px 12px;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid #e7edf2;
+        }
+
+        .doctor-table th {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #667085;
+            background: #f8fafc;
         }
 
         .doctor-profile-cell {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             gap: 12px;
-            min-width: 230px;
+            min-width: 210px;
         }
 
         .doctor-photo {
-            display: block;
-            flex-shrink: 0;
-            width: 58px;
-            height: 68px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
             object-fit: cover;
-            border-radius: 10px;
-            background: #edf2f7;
+            flex-shrink: 0;
+            background: #e8eef3;
         }
 
         .doctor-photo-placeholder {
             display: flex;
-            flex-shrink: 0;
             align-items: center;
             justify-content: center;
-            width: 58px;
-            height: 68px;
-            border-radius: 10px;
-            background: #e6f5f2;
-            color: #087e73;
+            font-weight: 700;
+            color: #1769aa;
+        }
+
+        .doctor-name {
+            font-weight: 700;
+            color: #17212f;
+        }
+
+        .doctor-subtext {
+            margin-top: 4px;
             font-size: 12px;
-            text-align: center;
-        }
-
-        .doctor-profile-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            min-width: 0;
-        }
-
-        .doctor-profile-info strong {
-            color: #243447;
-        }
-
-        .doctor-profile-info small {
-            color: #718096;
             line-height: 1.5;
-            overflow-wrap: anywhere;
-        }
-
-        .doctor-detail {
-            min-width: 150px;
-            max-width: 260px;
-            white-space: normal;
-            overflow-wrap: anywhere;
-            line-height: 1.7;
-        }
-
-        .doctor-table-scroll {
-            overflow-x: auto;
-            width: 100%;
-        }
-
-        .doctor-table-scroll .admin-table {
-            min-width: 1050px;
+            color: #697586;
         }
 
         .doctor-status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
             white-space: nowrap;
         }
 
+        .doctor-status.available {
+            background: #e7f8ef;
+            color: #18794e;
+        }
+
+        .doctor-status.busy {
+            background: #fff0e7;
+            color: #b54708;
+        }
+
+        .doctor-action {
+            white-space: nowrap;
+        }
+
+        .doctor-empty {
+            text-align: center;
+            padding: 38px 16px;
+            color: #667085;
+        }
+
+        .doctor-count {
+            margin-bottom: 18px;
+            color: #667085;
+            font-size: 14px;
+        }
+
         @media (max-width: 640px) {
-            .doctor-filter-form {
-                align-items: stretch;
-                flex-direction: column;
+            .doctor-filters {
+                width: 100%;
             }
 
-            .doctor-filter-form input,
-            .doctor-filter-form select {
+            .doctor-filters input,
+            .doctor-filters select {
                 width: 100%;
-                box-sizing: border-box;
+                min-width: 0;
             }
         }
     </style>
@@ -246,170 +253,81 @@ function doctorPhotoUrl(?string $photo): ?string
 
 <body class="admin-page">
 
-    <header class="admin-header">
-        <a class="admin-brand" href="../index.php">
-            RS Medika Sehat
-            <span>Dashboard Admin</span>
-        </a>
-
-        <div class="admin-header-actions">
-            <button
-                class="admin-menu-toggle"
-                type="button"
-                aria-expanded="false"
-                aria-controls="adminSidebar"
-                data-sidebar-toggle>
-                Menu
-            </button>
-
-            <a class="admin-back-link" href="../index.php">
-                Lihat Beranda
-            </a>
-
-            <form method="post" action="../logout.php">
-                <input
-                    type="hidden"
-                    name="csrf_token"
-                    value="<?= doctorEscape($csrfToken) ?>">
-
-                <button class="btn btn-secondary" type="submit">
-                    Keluar
-                </button>
-            </form>
-        </div>
-    </header>
+    <?php require __DIR__ . '/../partials/header.php'; ?>
 
     <div class="admin-layout">
 
         <?php require __DIR__ . '/../partials/sidebar.php'; ?>
 
-        <!-- KONTEN UTAMA -->
         <main class="admin-main" id="dashboard">
 
             <div class="admin-page-heading">
                 <div>
                     <p class="eyebrow">Manajemen rumah sakit</p>
                     <h1>Data Dokter</h1>
-
                     <p class="admin-intro">
-                        Kelola profil, informasi, dan data dokter
-                        RS Medika Sehat.
+                        Kelola informasi dokter dan jadwal praktik RS Medika Sehat.
                     </p>
                 </div>
 
-                <span class="admin-count">
-                    <?= count($doctors) ?> dokter
-                </span>
+                <a class="btn btn-primary" href="tambah_dokter.php">
+                    + Tambah Dokter
+                </a>
             </div>
 
-            <!-- NOTIFIKASI -->
-            <?php if (is_array($notice) && isset($notice['message'])): ?>
+            <?php require __DIR__ . '/../partials/flash_message.php'; ?>
 
-                <p
-                    class="admin-alert <?= doctorEscape(
-                                            (string) ($notice['type'] ?? 'error')
-                                        ) ?>"
-                    role="status">
+            <?php if ($errorMessage !== null): ?>
+                <section class="admin-panel" role="alert">
+                    <?= dataDokterEscape($errorMessage) ?>
+                </section>
+            <?php else: ?>
 
-                    <?= doctorEscape((string) $notice['message']) ?>
+                <section class="admin-panel">
 
-                </p>
+                    <div class="doctor-toolbar">
+                        <form class="doctor-filters" method="get"
+                            action="data_dokter.php">
 
-            <?php endif; ?>
+                            <input
+                                type="search"
+                                name="search"
+                                placeholder="Cari nama atau spesialisasi..."
+                                value="<?= dataDokterEscape($search) ?>">
 
-            <section class="admin-panel admin-table-panel">
+                            <select name="status" aria-label="Filter status dokter">
+                                <option value="">Semua status</option>
+                                <?php foreach ($allowedStatuses as $value => $label): ?>
+                                    <option
+                                        value="<?= dataDokterEscape($value) ?>"
+                                        <?= $statusFilter === $value
+                                            ? 'selected'
+                                            : '' ?>>
+                                        <?= dataDokterEscape($label) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
 
-                <div class="admin-page-heading">
-                    <div>
-                        <h2>Daftar Dokter</h2>
+                            <button class="btn btn-secondary" type="submit">
+                                Cari
+                            </button>
 
-                        <p class="admin-intro">
-                            Informasi profil, pendidikan, pengalaman,
-                            dan jadwal praktik dokter.
-                        </p>
+                            <a class="btn btn-secondary" href="data_dokter.php">
+                                Reset
+                            </a>
+                        </form>
                     </div>
 
-                    <a
-                        class="btn btn-primary"
-                        href="tambah_dokter.php">
-                        + Tambah Dokter
-                    </a>
-                </div>
-
-                <!-- PENCARIAN DAN FILTER -->
-                <form
-                    method="get"
-                    action="data_dokter.php"
-                    class="doctor-filter-form">
-
-                    <input
-                        type="search"
-                        name="q"
-                        placeholder="Cari nama dokter..."
-                        value="<?= doctorEscape($keyword) ?>"
-                        aria-label="Cari nama dokter">
-
-                    <select
-                        name="specialty"
-                        aria-label="Filter spesialisasi">
-
-                        <option value="">Semua spesialisasi</option>
-
-                        <?php foreach ($specialties as $item): ?>
-                            <option
-                                value="<?= doctorEscape($item) ?>"
-                                <?= $specialty === $item ? 'selected' : '' ?>>
-
-                                <?= doctorEscape($item) ?>
-
-                            </option>
-                        <?php endforeach; ?>
-
-                    </select>
-
-                    <select
-                        name="status"
-                        aria-label="Filter status dokter">
-
-                        <option value="">Semua status</option>
-
-                        <?php foreach ($statuses as $key => $label): ?>
-                            <option
-                                value="<?= doctorEscape($key) ?>"
-                                <?= $status === $key ? 'selected' : '' ?>>
-
-                                <?= doctorEscape($label) ?>
-
-                            </option>
-                        <?php endforeach; ?>
-
-                    </select>
-
-                    <button class="btn btn-primary" type="submit">
-                        Cari
-                    </button>
-
-                    <a
-                        class="btn btn-secondary"
-                        href="data_dokter.php">
-                        Reset
-                    </a>
-
-                </form>
-
-                <!-- TABEL DOKTER -->
-                <?php if ($doctors === []): ?>
-
-                    <p class="admin-empty-state">
-                        Belum ada data dokter yang sesuai dengan pencarian.
+                    <p class="doctor-count">
+                        Total dokter terdaftar:
+                        <strong><?= $totalDoctors ?></strong>
+                        &middot;
+                        Hasil pencarian:
+                        <strong><?= count($doctors) ?></strong>
                     </p>
 
-                <?php else: ?>
-
-                    <div class="admin-table-wrap doctor-table-scroll">
-
-                        <table class="admin-table">
-
+                    <div class="doctor-table-wrap">
+                        <table class="doctor-table">
                             <thead>
                                 <tr>
                                     <th>Profil Dokter</th>
@@ -423,183 +341,152 @@ function doctorPhotoUrl(?string $photo): ?string
                             </thead>
 
                             <tbody>
-
-                                <?php foreach ($doctors as $doctor): ?>
-
+                                <?php if ($doctors === []): ?>
                                     <tr>
-
-                                        <!-- FOTO DAN NAMA -->
-                                        <td>
-                                            <div class="doctor-profile-cell">
-
-                                                <?php
-                                                $photoUrl = doctorPhotoUrl(
-                                                    isset($doctor['photo'])
-                                                        ? (string) $doctor['photo']
-                                                        : null
-                                                );
-                                                ?>
-
-                                                <?php if ($photoUrl !== null): ?>
-
-                                                    <img
-                                                        class="doctor-photo"
-                                                        src="<?= doctorEscape($photoUrl) ?>"
-                                                        alt="Foto <?= doctorEscape(
-                                                                        (string) $doctor['name']
-                                                                    ) ?>"
-                                                        loading="lazy">
-
-                                                <?php else: ?>
-
-                                                    <div
-                                                        class="doctor-photo-placeholder"
-                                                        aria-label="Foto belum tersedia">
-                                                        No Photo
-                                                    </div>
-
-                                                <?php endif; ?>
-
-                                                <div class="doctor-profile-info">
-
-                                                    <strong>
-                                                        <?= doctorEscape(
-                                                            (string) $doctor['name']
-                                                        ) ?>
-                                                    </strong>
-
-                                                    <small>
-                                                        <?= doctorEscape(
-                                                            (string) (
-                                                                $doctor['biography']
-                                                                ?? 'Biografi belum tersedia.'
-                                                            )
-                                                        ) ?>
-                                                    </small>
-
-                                                </div>
-
-                                            </div>
+                                        <td colspan="7" class="doctor-empty">
+                                            Belum ada data dokter yang sesuai.
+                                            <br>
+                                            <a href="tambah_dokter.php">
+                                                Tambahkan dokter baru
+                                            </a>
                                         </td>
-
-                                        <!-- SPESIALISASI -->
-                                        <td>
-                                            <?= doctorEscape(
-                                                (string) $doctor['specialty']
-                                            ) ?>
-                                        </td>
-
-                                        <!-- PENDIDIKAN -->
-                                        <td>
-                                            <div class="doctor-detail">
-                                                <?= doctorEscape(
-                                                    (string) (
-                                                        $doctor['education']
-                                                        ?: 'Belum diisi'
-                                                    )
-                                                ) ?>
-                                            </div>
-                                        </td>
-
-                                        <!-- PENGALAMAN -->
-                                        <td>
-                                            <div class="doctor-detail">
-                                                <?= doctorEscape(
-                                                    (string) (
-                                                        $doctor['experience']
-                                                        ?: 'Belum diisi'
-                                                    )
-                                                ) ?>
-                                            </div>
-                                        </td>
-
-                                        <!-- JADWAL PRAKTIK -->
-                                        <td>
-                                            <div class="doctor-detail">
-
-                                                <?= doctorEscape(
-                                                    (string) (
-                                                        $doctor['work_days']
-                                                        ?? '-'
-                                                    )
-                                                ) ?>
-
-                                                <br>
-
-                                                <?= doctorEscape(
-                                                    substr(
-                                                        (string) $doctor['start_time'],
-                                                        0,
-                                                        5
-                                                    )
-                                                ) ?>
-
-                                                -
-
-                                                <?= doctorEscape(
-                                                    substr(
-                                                        (string) $doctor['end_time'],
-                                                        0,
-                                                        5
-                                                    )
-                                                ) ?>
-
-                                                <br>
-
-                                                Ruang
-                                                <?= doctorEscape(
-                                                    (string) (
-                                                        $doctor['room'] ?? '-'
-                                                    )
-                                                ) ?>
-
-                                            </div>
-                                        </td>
-
-                                        <!-- STATUS -->
-                                        <td>
-                                            <span class="admin-status <?= doctorEscape(
-                                                                            (string) $doctor['status']
-                                                                        ) ?> doctor-status">
-
-                                                <?= doctorEscape(
-                                                    $statuses[(string) $doctor['status']] ?? 'Tidak diketahui'
-                                                ) ?>
-
-                                            </span>
-                                        </td>
-
-                                        <!-- AKSI -->
-                                        <td>
-                                            <div class="admin-row-actions">
-
-                                                <a
-                                                    class="admin-edit-link"
-                                                    href="../index.php?edit=<?= (int) $doctor['id'] ?>">
-
-                                                    Ubah
-
-                                                </a>
-
-                                            </div>
-                                        </td>
-
                                     </tr>
+                                <?php else: ?>
 
-                                <?php endforeach; ?>
+                                    <?php foreach ($doctors as $item): ?>
+                                        <?php
+                                        $status = (string) $item['status'];
+                                        $statusLabel =
+                                            $allowedStatuses[$status] ?? 'Tidak diketahui';
 
+                                        $photo = trim((string) ($item['photo'] ?? ''));
+
+                                        if (
+                                            $photo !== ''
+                                            && !preg_match('~^(https?://|/)~i', $photo)
+                                        ) {
+                                            $photo = '../../' . ltrim($photo, '/');
+                                        }
+
+                                        $startTime = substr(
+                                            (string) $item['start_time'],
+                                            0,
+                                            5
+                                        );
+
+                                        $endTime = substr(
+                                            (string) $item['end_time'],
+                                            0,
+                                            5
+                                        );
+                                        ?>
+
+                                        <tr>
+                                            <td>
+                                                <div class="doctor-profile-cell">
+
+                                                    <?php if ($photo !== ''): ?>
+                                                        <img
+                                                            class="doctor-photo"
+                                                            src="<?= dataDokterEscape($photo) ?>"
+                                                            alt="Foto <?= dataDokterEscape((string) $item['name']) ?>"
+                                                            loading="lazy">
+                                                    <?php else: ?>
+                                                        <div class="doctor-photo doctor-photo-placeholder">
+                                                            <?= dataDokterEscape(
+                                                                strtoupper(
+                                                                    mb_substr(
+                                                                        (string) $item['name'],
+                                                                        0,
+                                                                        1,
+                                                                        'UTF-8'
+                                                                    )
+                                                                )
+                                                            ) ?>
+                                                        </div>
+                                                    <?php endif; ?>
+
+                                                    <div>
+                                                        <div class="doctor-name">
+                                                            <?= dataDokterEscape((string) $item['name']) ?>
+                                                        </div>
+                                                        <div class="doctor-subtext">
+                                                            <?= dataDokterEscape((string) ($item['biography'] ?? '') !== ''
+                                                                ? mb_strimwidth(
+                                                                    (string) $item['biography'],
+                                                                    0,
+                                                                    65,
+                                                                    '...',
+                                                                    'UTF-8'
+                                                                )
+                                                                : 'Belum ada biografi') ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <?= dataDokterEscape((string) $item['specialty']) ?>
+                                            </td>
+
+                                            <td>
+                                                <?= dataDokterEscape(
+                                                    (string) (($item['education'] ?? '') ?: '-')
+                                                ) ?>
+                                            </td>
+
+                                            <td>
+                                                <?= dataDokterEscape(
+                                                    (string) (($item['experience'] ?? '') ?: '-')
+                                                ) ?>
+                                            </td>
+
+                                            <td>
+                                                <strong>
+                                                    <?= dataDokterEscape((string) $item['work_days']) ?>
+                                                </strong>
+                                                <div class="doctor-subtext">
+                                                    <?= dataDokterEscape($startTime) ?>
+                                                    –
+                                                    <?= dataDokterEscape($endTime) ?>
+                                                </div>
+                                                <div class="doctor-subtext">
+                                                    Ruang:
+                                                    <?= dataDokterEscape((string) $item['room']) ?>
+                                                </div>
+                                            </td>
+
+                                            <td>
+                                                <span class="doctor-status <?= dataDokterEscape(
+                                                                                in_array($status, ['available', 'busy'], true)
+                                                                                    ? $status
+                                                                                    : ''
+                                                                            ) ?>">
+                                                    <?= dataDokterEscape($statusLabel) ?>
+                                                </span>
+                                            </td>
+
+                                            <td class="doctor-action">
+                                                <a
+                                                    class="btn btn-secondary"
+                                                    href="tambah_dokter.php?edit=<?= (int) $item['id'] ?>">
+                                                    Edit
+                                                </a>
+                                            </td>
+                                        </tr>
+
+                                    <?php endforeach; ?>
+
+                                <?php endif; ?>
                             </tbody>
-
                         </table>
-
                     </div>
 
-                <?php endif; ?>
+                </section>
 
-            </section>
+            <?php endif; ?>
 
         </main>
-
     </div>
 
 </body>
