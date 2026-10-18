@@ -50,7 +50,6 @@ try {
         'name' => (string) $medicine['name'],
         'category' => (string) $medicine['category'],
         'unit' => (string) $medicine['unit'],
-        'stock' => (string) $medicine['stock'],
         'minimum_stock' => (string) $medicine['minimum_stock'],
         'price' => (string) $medicine['price'],
         'expiry_date' => (string) ($medicine['expiry_date'] ?? ''),
@@ -83,20 +82,6 @@ try {
             $errors[] = 'Satuan obat wajib dipilih.';
         }
 
-        foreach (
-            [
-                'stock' => 'Stok',
-                'minimum_stock' => 'Batas minimum stok'
-            ] as $field => $label
-        ) {
-            if (
-                $form[$field] === ''
-                || !ctype_digit($form[$field])
-                || (float) $form[$field] > 2147483647
-            ) {
-                $errors[] = $label . ' harus berupa bilangan bulat nonnegatif.';
-            }
-        }
 
         $priceInput = str_replace(',', '.', $form['price']);
 
@@ -147,15 +132,14 @@ try {
             } else {
                 $update = $connection->prepare(
                     'UPDATE medicines SET
-                        code = :code,
-                        name = :name,
-                        category = :category,
-                        unit = :unit,
-                        stock = :stock,
-                        minimum_stock = :minimum_stock,
-                        price = :price,
-                        expiry_date = :expiry_date
-                     WHERE id = :id'
+        code = :code,
+        name = :name,
+        category = :category,
+        unit = :unit,
+        minimum_stock = :minimum_stock,
+        price = :price,
+        expiry_date = :expiry_date
+     WHERE id = :id'
                 );
 
                 $update->execute([
@@ -163,7 +147,6 @@ try {
                     'name' => $form['name'],
                     'category' => $form['category'],
                     'unit' => $form['unit'],
-                    'stock' => (int) $form['stock'],
                     'minimum_stock' => (int) $form['minimum_stock'],
                     'price' => $priceInput,
                     'expiry_date' => $form['expiry_date'] !== ''
@@ -389,6 +372,16 @@ if (
                         </div>
                     </div>
 
+                    <div style="margin-bottom: 20px; padding: 14px; background: #f0f7ff; border-radius: 9px;">
+                        <strong>Stok saat ini:</strong>
+                        <?= editObatEscape($medicine['stock']) ?>
+                        <?= editObatEscape($medicine['unit']) ?>
+
+                        <p style="margin: 6px 0 0; color: #667085; font-size: 13px;">
+                            Untuk mengubah jumlah stok, gunakan menu Stok Masuk atau Stok Keluar.
+                        </p>
+                    </div>
+
                     <form method="post"
                         action="edit_obat.php?id=<?= (int) $id ?>"
                         class="edit-obat-form">
@@ -432,12 +425,6 @@ if (
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                        </div>
-
-                        <div class="edit-obat-field">
-                            <label for="stock">Stok *</label>
-                            <input type="number" id="stock" name="stock" min="0" step="1"
-                                value="<?= editObatEscape($form['stock']) ?>" required>
                         </div>
 
                         <div class="edit-obat-field">

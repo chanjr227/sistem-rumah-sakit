@@ -125,6 +125,17 @@ $homeUrl = '/rumah_sakit/index.php';
                     <?= $currentPage === 'data_obat.php' ? 'aria-current="page"' : '' ?>>
                     Data Obat
                 </a>
+                <a
+                    href="<?= $pharmacyUrl ?>transaksi_stok.php?jenis=masuk"
+                    class="admin-submenu-link <?= $currentPage === 'transaksi_stok.php' && ($_GET['jenis'] ?? 'masuk') === 'masuk' ? 'active' : '' ?>">
+                    Stok Masuk
+                </a>
+
+                <a
+                    href="<?= $pharmacyUrl ?>transaksi_stok.php?jenis=keluar"
+                    class="admin-submenu-link <?= $currentPage === 'transaksi_stok.php' && ($_GET['jenis'] ?? '') === 'keluar' ? 'active' : '' ?>">
+                    Stok Keluar
+                </a>
 
             </div>
         </div>
