@@ -7,75 +7,88 @@ require_once __DIR__ . '/../../config/database.php';
 
 requireAdminLogin();
 
-function obatEscape(mixed $value): string
+function dataObatEscape(mixed $value): string
 {
-    return htmlspecialchars(
-        (string) $value,
-        ENT_QUOTES,
-        'UTF-8'
-    );
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-$keyword = trim((string) ($_GET['q'] ?? ''));
+$search = trim((string) ($_GET['search'] ?? ''));
+$stockFilter = (string) ($_GET['stock'] ?? '');
+
+$allowedStockFilters = ['normal', 'low', 'empty'];
+
+if (!in_array($stockFilter, $allowedStockFilters, true)) {
+    $stockFilter = '';
+}
+
+$connection = getDatabaseConnection();
 
 $medicines = [];
 $totalMedicines = 0;
-$lowStock = 0;
+$totalLowStock = 0;
+$totalEmptyStock = 0;
 $errorMessage = null;
 
 try {
-    $connection = getDatabaseConnection();
+    $where = [];
+    $params = [];
 
-    // Menghitung total jenis obat.
-    $totalStatement = $connection->query(
-        'SELECT COUNT(*) FROM medicines'
-    );
-
-    $totalMedicines = (int) $totalStatement->fetchColumn();
-
-    // Menghitung obat yang stoknya menipis.
-    $lowStockStatement = $connection->query(
-        'SELECT COUNT(*)
-         FROM medicines
-         WHERE stock <= minimum_stock'
-    );
-
-    $lowStock = (int) $lowStockStatement->fetchColumn();
-
-    // Mengambil data obat berdasarkan pencarian.
-    if ($keyword !== '') {
-        $statement = $connection->prepare(
-            'SELECT *
-             FROM medicines
-             WHERE name LIKE :name
-                OR code LIKE :code
-                OR category LIKE :category
-             ORDER BY id DESC'
-        );
-
-        $searchValue = '%' . $keyword . '%';
-
-        $statement->execute([
-            'name' => $searchValue,
-            'code' => $searchValue,
-            'category' => $searchValue,
-        ]);
-    } else {
-        $statement = $connection->query(
-            'SELECT *
-             FROM medicines
-             ORDER BY id DESC'
-        );
+    if ($search !== '') {
+        $where[] = '(name LIKE :search_name
+                     OR code LIKE :search_code
+                     OR category LIKE :search_category)';
+        $params['search_name'] = '%' . $search . '%';
+        $params['search_code'] = '%' . $search . '%';
+        $params['search_category'] = '%' . $search . '%';
     }
 
-    $medicines = $statement->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $exception) {
-    error_log(
-        'Load medicines error: ' . $exception->getMessage()
-    );
+    if ($stockFilter === 'low') {
+        $where[] = 'stock > 0 AND stock <= minimum_stock';
+    } elseif ($stockFilter === 'empty') {
+        $where[] = 'stock = 0';
+    } elseif ($stockFilter === 'normal') {
+        $where[] = 'stock > minimum_stock';
+    }
 
-    $errorMessage =
-        'Data obat gagal dimuat. Periksa tabel medicines dan koneksi database.';
+    $sql = '
+        SELECT
+            id,
+            code,
+            name,
+            category,
+            unit,
+            stock,
+            minimum_stock,
+            price,
+            expiry_date
+        FROM medicines
+    ';
+
+    if ($where !== []) {
+        $sql .= ' WHERE ' . implode(' AND ', $where);
+    }
+
+    $sql .= ' ORDER BY name ASC';
+
+    $statement = $connection->prepare($sql);
+    $statement->execute($params);
+    $medicines = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+    $totalMedicines = (int) $connection->query(
+        'SELECT COUNT(*) FROM medicines'
+    )->fetchColumn();
+
+    $totalLowStock = (int) $connection->query(
+        'SELECT COUNT(*) FROM medicines
+         WHERE stock > 0 AND stock <= minimum_stock'
+    )->fetchColumn();
+
+    $totalEmptyStock = (int) $connection->query(
+        'SELECT COUNT(*) FROM medicines WHERE stock = 0'
+    )->fetchColumn();
+} catch (PDOException $exception) {
+    error_log('Load medicines error: ' . $exception->getMessage());
+    $errorMessage = 'Data obat gagal dimuat. Periksa struktur tabel medicines.';
 }
 
 ?>
@@ -85,363 +98,176 @@ try {
 
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Obat - RS Medika Sehat</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossorigin>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
-
-    <link
-        rel="stylesheet"
-        href="../../css/base.css">
-
-    <link
-        rel="stylesheet"
-        href="../../css/pages/admin.css">
-
-    <script
-        src="../../js/pages/admin.js"
-        defer>
-    </script>
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/pages/admin.css">
+    <script src="../../js/pages/admin.js" defer></script>
 
     <style>
-        /* ==============================
-           STATISTIK OBAT
-        ============================== */
-
         .obat-stats {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .obat-stat-card {
-            display: flex;
-            align-items: center;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
-            padding: 24px;
-            background: #fff;
-            border: 1px solid #e7edf2;
-            border-radius: 14px;
-            min-width: 0;
+            margin-bottom: 22px;
         }
 
-        .obat-stat-icon {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+        .obat-stat {
+            padding: 20px;
+            background: var(--panel, #fff);
+            border: 1px solid var(--border, #e5e7eb);
             border-radius: 12px;
-            font-size: 22px;
-            font-weight: 700;
         }
 
-        .obat-stat-icon.blue {
-            color: #1769aa;
-            background: #eaf4ff;
-        }
-
-        .obat-stat-icon.orange {
-            color: #b54708;
-            background: #fff0e7;
-        }
-
-        .obat-stat-info p {
-            margin: 0 0 7px;
+        .obat-stat-label {
             color: #667085;
             font-size: 13px;
         }
 
-        .obat-stat-info h2 {
-            margin: 0 0 5px;
-            color: #17212f;
-            font-size: 26px;
+        .obat-stat-number {
+            display: block;
+            margin-top: 8px;
+            font-size: 28px;
             font-weight: 800;
+            color: #17212f;
         }
-
-        .obat-stat-info small {
-            color: #667085;
-            font-size: 12px;
-        }
-
-        /* ==============================
-           TOOLBAR DAN PENCARIAN
-        ============================== */
 
         .obat-toolbar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 14px;
+            gap: 12px;
             flex-wrap: wrap;
-            margin-bottom: 22px;
+            margin-bottom: 20px;
         }
 
-        .obat-search {
+        .obat-filters {
             display: flex;
-            align-items: center;
-            gap: 10px;
             flex: 1;
-            min-width: 240px;
-            min-height: 44px;
-            padding: 0 14px;
-            background: #fff;
-            border: 1px solid #d9e1e8;
-            border-radius: 9px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .obat-search-icon {
-            color: #667085;
-            font-size: 20px;
-            flex-shrink: 0;
-        }
-
-        .obat-search input {
-            width: 100%;
-            min-width: 0;
-            padding: 10px 0;
-            border: none;
-            outline: none;
-            background: transparent;
-            color: #17212f;
+        .obat-filters input,
+        .obat-filters select {
+            min-height: 42px;
+            padding: 10px 12px;
+            border: 1px solid var(--border, #d9e1e8);
+            border-radius: 8px;
             font: inherit;
-            font-size: 14px;
         }
 
-        .obat-search:focus-within {
-            border-color: #1769aa;
-            box-shadow: 0 0 0 3px rgba(23, 105, 170, .10);
+        .obat-filters input {
+            flex: 1;
+            min-width: 200px;
         }
-
-        .obat-toolbar-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        /* ==============================
-           TABEL OBAT
-        ============================== */
 
         .obat-table-wrap {
             width: 100%;
             overflow-x: auto;
-            border: 1px solid #e7edf2;
-            border-radius: 10px;
         }
 
         .obat-table {
             width: 100%;
-            min-width: 950px;
+            min-width: 1050px;
             border-collapse: collapse;
-            background: #fff;
         }
 
         .obat-table th,
         .obat-table td {
-            padding: 15px 13px;
+            padding: 13px 12px;
             text-align: left;
             vertical-align: middle;
             border-bottom: 1px solid #e7edf2;
         }
 
         .obat-table th {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .03em;
             color: #667085;
             background: #f8fafc;
-            font-size: 11px;
+        }
+
+        .obat-name {
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            white-space: nowrap;
+            color: #17212f;
         }
 
-        .obat-table td {
-            color: #344054;
-            font-size: 13px;
+        .obat-muted {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #697586;
         }
 
-        .obat-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .obat-table tbody tr:hover:not(.obat-empty-row) {
-            background: #f9fbfd;
-        }
-
-        .obat-number {
-            color: #667085 !important;
-            width: 48px;
-        }
-
-        .obat-code {
+        .obat-badge {
             display: inline-block;
-            padding: 5px 8px;
-            border-radius: 6px;
-            background: #eaf4ff;
-            color: #1769aa;
+            padding: 5px 9px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: 700;
             white-space: nowrap;
         }
 
-        .obat-name {
-            color: #17212f;
-            font-weight: 700;
-        }
-
-        .obat-price {
-            color: #17212f !important;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        /* ==============================
-           STATUS STOK
-        ============================== */
-
-        .obat-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .obat-status::before {
-            content: "";
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .obat-status.available {
+        .obat-normal {
             color: #18794e;
             background: #e7f8ef;
         }
 
-        .obat-status.low {
+        .obat-low {
             color: #b54708;
             background: #fff0e7;
         }
 
-        /* ==============================
-           DATA KOSONG DAN FOOTER TABEL
-        ============================== */
-
-        .obat-empty-row:hover {
-            background: #fff !important;
+        .obat-empty-stock {
+            color: #b42318;
+            background: #fee4e2;
         }
 
         .obat-empty {
-            padding: 44px 20px !important;
+            padding: 35px 16px !important;
             text-align: center !important;
-            color: #667085 !important;
-        }
-
-        .obat-empty-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 54px;
-            height: 54px;
-            margin: 0 auto 14px;
-            border-radius: 14px;
-            background: #f0f5fa;
             color: #667085;
-            font-size: 24px;
         }
 
-        .obat-empty strong {
-            display: block;
-            color: #17212f;
-            font-size: 15px;
+        .obat-action {
+            white-space: nowrap;
         }
 
-        .obat-empty p {
-            margin: 8px 0 0;
-            color: #667085;
+        .obat-action .btn {
+            padding: 8px 12px;
+        }
+
+        .obat-note {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-radius: 9px;
+            background: #eff8ff;
+            color: #175cd3;
             font-size: 13px;
-            font-weight: 400;
+            line-height: 1.6;
         }
 
-        .obat-table-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            padding-top: 18px;
-            color: #667085;
-            font-size: 13px;
+        .obat-error {
+            padding: 16px;
+            border-radius: 9px;
+            background: #fee4e2;
+            color: #b42318;
         }
 
-        .obat-alert {
-            margin-bottom: 22px;
-            padding: 16px 18px;
-            border: 1px solid #f3c7c7;
-            border-radius: 10px;
-            background: #fff1f1;
-            color: #a4262c;
-            font-size: 14px;
-        }
-
-        /* ==============================
-           RESPONSIVE
-        ============================== */
-
-        @media (max-width: 900px) {
-            .obat-table {
-                min-width: 950px;
-            }
-        }
-
-        @media (max-width: 640px) {
+        @media (max-width: 700px) {
             .obat-stats {
                 grid-template-columns: 1fr;
-                gap: 14px;
             }
 
-            .obat-stat-card {
-                padding: 19px;
+            .obat-filters {
+                width: 100%;
             }
 
-            .obat-toolbar {
-                align-items: stretch;
-            }
-
-            .obat-search {
+            .obat-filters input,
+            .obat-filters select {
+                width: 100%;
                 min-width: 0;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
-            .obat-toolbar-actions {
-                width: 100%;
-            }
-
-            .obat-toolbar-actions .btn {
-                flex: 1;
-                text-align: center;
-                justify-content: center;
             }
         }
     </style>
@@ -452,27 +278,20 @@ try {
     <?php require __DIR__ . '/../partials/header.php'; ?>
 
     <div class="admin-layout">
-
         <?php require __DIR__ . '/../partials/sidebar.php'; ?>
 
         <main class="admin-main" id="dashboard">
 
-            <!-- JUDUL HALAMAN -->
-
             <div class="admin-page-heading">
                 <div>
-                    <p class="eyebrow">Modul farmasi</p>
-
+                    <p class="eyebrow">Manajemen rumah sakit</p>
                     <h1>Data Obat</h1>
-
                     <p class="admin-intro">
-                        Kelola data dan ketersediaan obat RS Medika Sehat.
+                        Kelola identitas obat dan pantau persediaan farmasi.
                     </p>
                 </div>
 
-                <a
-                    class="btn btn-primary"
-                    href="tambah_obat.php">
+                <a class="btn btn-primary" href="tambah_obat.php">
                     + Tambah Obat
                 </a>
             </div>
@@ -480,106 +299,74 @@ try {
             <?php require __DIR__ . '/../partials/flash_message.php'; ?>
 
             <?php if ($errorMessage !== null): ?>
-
-                <section class="admin-panel obat-alert" role="alert">
-                    <?= obatEscape($errorMessage) ?>
+                <section class="admin-panel obat-error" role="alert">
+                    <?= dataObatEscape($errorMessage) ?>
                 </section>
-
             <?php else: ?>
 
-                <!-- STATISTIK -->
+                <div class="obat-stats">
+                    <div class="obat-stat">
+                        <span class="obat-stat-label">Total jenis obat</span>
+                        <strong class="obat-stat-number">
+                            <?= number_format($totalMedicines) ?>
+                        </strong>
+                    </div>
 
-                <section class="obat-stats">
+                    <div class="obat-stat">
+                        <span class="obat-stat-label">Stok menipis</span>
+                        <strong class="obat-stat-number">
+                            <?= number_format($totalLowStock) ?>
+                        </strong>
+                    </div>
 
-                    <article class="obat-stat-card">
-                        <div class="obat-stat-icon blue">▤</div>
-
-                        <div class="obat-stat-info">
-                            <p>Total Jenis Obat</p>
-
-                            <h2>
-                                <?= number_format($totalMedicines, 0, ',', '.') ?>
-                            </h2>
-
-                            <small>Jenis obat terdaftar</small>
-                        </div>
-                    </article>
-
-                    <article class="obat-stat-card">
-                        <div class="obat-stat-icon orange">!</div>
-
-                        <div class="obat-stat-info">
-                            <p>Stok Menipis</p>
-
-                            <h2>
-                                <?= number_format($lowStock, 0, ',', '.') ?>
-                            </h2>
-
-                            <small>Perlu diperiksa</small>
-                        </div>
-                    </article>
-
-                </section>
-
-                <!-- DAFTAR OBAT -->
+                    <div class="obat-stat">
+                        <span class="obat-stat-label">Stok habis</span>
+                        <strong class="obat-stat-number">
+                            <?= number_format($totalEmptyStock) ?>
+                        </strong>
+                    </div>
+                </div>
 
                 <section class="admin-panel">
 
-                    <div class="section-heading">
-                        <div>
-                            <h2>Daftar Obat</h2>
-
-                            <p>
-                                Informasi stok dan persediaan obat.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- FORM PENCARIAN -->
-
-                    <form
-                        method="get"
-                        action="data_obat.php"
-                        class="obat-toolbar">
-
-                        <div class="obat-search">
-                            <span
-                                class="obat-search-icon"
-                                aria-hidden="true">⌕</span>
+                    <div class="obat-toolbar">
+                        <form class="obat-filters" method="get"
+                            action="data_obat.php">
 
                             <input
                                 type="search"
-                                name="q"
-                                placeholder="Cari nama, kode, atau kategori obat..."
-                                value="<?= obatEscape($keyword) ?>"
-                                aria-label="Cari obat">
-                        </div>
+                                name="search"
+                                placeholder="Cari kode, nama, atau kategori obat..."
+                                value="<?= dataObatEscape($search) ?>">
 
-                        <div class="obat-toolbar-actions">
+                            <select name="stock" aria-label="Filter kondisi stok">
+                                <option value="">Semua kondisi stok</option>
+                                <option value="normal"
+                                    <?= $stockFilter === 'normal' ? 'selected' : '' ?>>
+                                    Stok normal
+                                </option>
+                                <option value="low"
+                                    <?= $stockFilter === 'low' ? 'selected' : '' ?>>
+                                    Stok menipis
+                                </option>
+                                <option value="empty"
+                                    <?= $stockFilter === 'empty' ? 'selected' : '' ?>>
+                                    Stok habis
+                                </option>
+                            </select>
 
-                            <button
-                                type="submit"
-                                class="btn btn-primary">
+                            <button class="btn btn-secondary" type="submit">
                                 Cari
                             </button>
 
-                            <?php if ($keyword !== ''): ?>
-                                <a
-                                    href="data_obat.php"
-                                    class="btn btn-secondary">
-                                    Reset
-                                </a>
-                            <?php endif; ?>
-
-                        </div>
-                    </form>
-
-                    <!-- TABEL OBAT -->
+                            <a class="btn btn-secondary" href="data_obat.php">
+                                Reset
+                            </a>
+                        </form>
+                    </div>
 
                     <div class="obat-table-wrap">
-
                         <table class="obat-table">
-
                             <thead>
                                 <tr>
                                     <th>No.</th>
@@ -587,7 +374,7 @@ try {
                                     <th>Nama Obat</th>
                                     <th>Kategori</th>
                                     <th>Satuan</th>
-                                    <th>Stok</th>
+                                    <th>Stok Terkini</th>
                                     <th>Harga</th>
                                     <th>Kedaluwarsa</th>
                                     <th>Status Stok</th>
@@ -596,83 +383,64 @@ try {
                             </thead>
 
                             <tbody>
-
                                 <?php if ($medicines === []): ?>
-
-                                    <tr class="obat-empty-row">
+                                    <tr>
                                         <td colspan="10" class="obat-empty">
-
-                                            <div class="obat-empty-icon">
-                                                ▤
-                                            </div>
-
-                                            <strong>
-                                                <?= $keyword !== ''
-                                                    ? 'Obat tidak ditemukan'
-                                                    : 'Belum ada data obat' ?>
-                                            </strong>
-
-                                            <p>
-                                                <?= $keyword !== ''
-                                                    ? 'Coba gunakan kata kunci yang berbeda.'
-                                                    : 'Tambahkan data obat untuk mulai mengelola persediaan.' ?>
-                                            </p>
-
+                                            Tidak ada data obat yang sesuai.
                                         </td>
                                     </tr>
-
                                 <?php else: ?>
 
                                     <?php foreach ($medicines as $index => $medicine): ?>
-
                                         <?php
                                         $stock = (int) $medicine['stock'];
                                         $minimumStock = (int) $medicine['minimum_stock'];
 
-                                        $isLow = $stock <= $minimumStock;
+                                        if ($stock === 0) {
+                                            $stockLabel = 'Stok habis';
+                                            $stockClass = 'obat-empty-stock';
+                                        } elseif ($stock <= $minimumStock) {
+                                            $stockLabel = 'Stok menipis';
+                                            $stockClass = 'obat-low';
+                                        } else {
+                                            $stockLabel = 'Normal';
+                                            $stockClass = 'obat-normal';
+                                        }
 
-                                        $expiry = (string) (
-                                            $medicine['expiry_date'] ?? ''
-                                        );
+                                        $expiryDate = $medicine['expiry_date'] ?? '';
+                                        $expiryLabel = '-';
 
-                                        $expiryTimestamp = $expiry !== ''
-                                            ? strtotime($expiry)
-                                            : false;
+                                        if ($expiryDate !== '' && $expiryDate !== null) {
+                                            $expiryTimestamp = strtotime((string) $expiryDate);
+                                            $expiryLabel = $expiryTimestamp !== false
+                                                ? date('d-m-Y', $expiryTimestamp)
+                                                : (string) $expiryDate;
+                                        }
                                         ?>
 
                                         <tr>
+                                            <td><?= $index + 1 ?></td>
 
-                                            <td class="obat-number">
-                                                <?= $index + 1 ?>
+                                            <td><?= dataObatEscape($medicine['code']) ?></td>
+
+                                            <td>
+                                                <div class="obat-name">
+                                                    <?= dataObatEscape($medicine['name']) ?>
+                                                </div>
+                                            </td>
+
+                                            <td><?= dataObatEscape($medicine['category']) ?></td>
+
+                                            <td><?= dataObatEscape($medicine['unit']) ?></td>
+
+                                            <td>
+                                                <strong><?= number_format($stock) ?></strong>
+                                                <div class="obat-muted">
+                                                    Minimum: <?= number_format($minimumStock) ?>
+                                                </div>
                                             </td>
 
                                             <td>
-                                                <span class="obat-code">
-                                                    <?= obatEscape($medicine['code'] ?? '') ?>
-                                                </span>
-                                            </td>
-
-                                            <td>
-                                                <strong class="obat-name">
-                                                    <?= obatEscape($medicine['name'] ?? '') ?>
-                                                </strong>
-                                            </td>
-
-                                            <td>
-                                                <?= obatEscape($medicine['category'] ?? '-') ?>
-                                            </td>
-
-                                            <td>
-                                                <?= obatEscape($medicine['unit'] ?? '-') ?>
-                                            </td>
-
-                                            <td>
-                                                <strong>
-                                                    <?= number_format($stock, 0, ',', '.') ?>
-                                                </strong>
-                                            </td>
-
-                                            <td class="obat-price">
                                                 Rp <?= number_format(
                                                         (float) $medicine['price'],
                                                         0,
@@ -681,67 +449,41 @@ try {
                                                     ) ?>
                                             </td>
 
-                                            <td>
-                                                <?= $expiryTimestamp !== false
-                                                    ? date('d-m-Y', $expiryTimestamp)
-                                                    : '-' ?>
-                                            </td>
+                                            <td><?= dataObatEscape($expiryLabel) ?></td>
 
                                             <td>
-                                                <span class="obat-status <?= $isLow
-                                                                                ? 'low'
-                                                                                : 'available' ?>">
-                                                    <?= $isLow
-                                                        ? 'Stok Menipis'
-                                                        : 'Tersedia' ?>
+                                                <span class="obat-badge <?= $stockClass ?>">
+                                                    <?= dataObatEscape($stockLabel) ?>
                                                 </span>
                                             </td>
 
-                                            <td>
+                                            <td class="obat-action">
                                                 <a
-                                                    href="edit_obat.php?id=<?= (int) $medicine['id'] ?>"
-                                                    class="btn btn-secondary btn-sm">
+                                                    class="btn btn-secondary"
+                                                    href="edit_obat.php?id=<?= (int) $medicine['id'] ?>">
                                                     Edit
                                                 </a>
                                             </td>
-
                                         </tr>
 
                                     <?php endforeach; ?>
 
                                 <?php endif; ?>
-
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- FOOTER TABEL -->
-
-                    <footer class="obat-table-footer">
-
-                        <span>
-                            Menampilkan <?= count($medicines) ?> data obat
-                        </span>
-
-                        <?php if ($keyword !== ''): ?>
-                            <span>
-                                Pencarian:
-                                <strong><?= obatEscape($keyword) ?></strong>
-                            </span>
-                        <?php endif; ?>
-
-                    </footer>
+                    <div class="obat-note">
+                        <strong>Informasi:</strong>
+                        stok pada halaman ini hanya menampilkan jumlah terkini.
+                        Gunakan menu <strong>Stok Masuk</strong> untuk menambah stok
+                        dan <strong>Stok Keluar</strong> untuk mengurangi stok agar
+                        setiap perubahan tercatat dalam riwayat transaksi.
+                    </div>
 
                 </section>
 
             <?php endif; ?>
-
-            <!-- FOOTER HALAMAN -->
-
-            <footer class="page-footer">
-                © <?= date('Y') ?> RS Medika Sehat.
-                Sistem Informasi Rumah Sakit.
-            </footer>
 
         </main>
     </div>

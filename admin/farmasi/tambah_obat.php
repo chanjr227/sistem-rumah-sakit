@@ -103,32 +103,42 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         }
     }
 
+
     if ($errors === []) {
+        $connection = null;
+
         try {
             $connection = getDatabaseConnection();
+            $connection->beginTransaction();
 
-            // Cek kode obat agar tidak ganda.
+            // Periksa kode obat agar tidak duplikat.
             $check = $connection->prepare(
                 'SELECT COUNT(*) FROM medicines WHERE code = :code'
             );
-            $check->execute(['code' => $form['code']]);
+            $check->execute([
+                'code' => $form['code'],
+            ]);
 
             if ((int) $check->fetchColumn() > 0) {
+                $connection->rollBack();
                 $errors[] = 'Kode obat sudah digunakan. Gunakan kode yang berbeda.';
             } else {
+                // Simpan identitas obat beserta stok awal.
                 $insert = $connection->prepare(
                     'INSERT INTO medicines
-                        (code, name, category, unit, stock, minimum_stock, price, expiry_date)
-                     VALUES
-                        (:code, :name, :category, :unit, :stock, :minimum_stock, :price, :expiry_date)'
+                    (code, name, category, unit, stock, minimum_stock, price, expiry_date)
+                 VALUES
+                    (:code, :name, :category, :unit, :stock, :minimum_stock, :price, :expiry_date)'
                 );
+
+                $initialStock = (int) $form['stock'];
 
                 $insert->execute([
                     'code' => $form['code'],
                     'name' => $form['name'],
                     'category' => $form['category'],
                     'unit' => $form['unit'],
-                    'stock' => (int) $form['stock'],
+                    'stock' => $initialStock,
                     'minimum_stock' => (int) $form['minimum_stock'],
                     'price' => $priceInput,
                     'expiry_date' => $form['expiry_date'] !== ''
@@ -136,16 +146,44 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                         : null,
                 ]);
 
+                $medicineId = (int) $connection->lastInsertId();
+
+                // Catat stok awal ke riwayat jika jumlahnya lebih dari nol.
+                if ($initialStock > 0) {
+                    $transaction = $connection->prepare(
+                        'INSERT INTO medicine_transactions
+                        (medicine_id, transaction_type, quantity, notes)
+                     VALUES
+                        (:medicine_id, :transaction_type, :quantity, :notes)'
+                    );
+
+                    $transaction->execute([
+                        'medicine_id' => $medicineId,
+                        'transaction_type' => 'masuk',
+                        'quantity' => $initialStock,
+                        'notes' => 'Stok awal saat pendaftaran obat',
+                    ]);
+                }
+
+                // Obat dan riwayat stok berhasil disimpan bersama.
+                $connection->commit();
+
                 $_SESSION['csrf_tambah_obat'] = bin2hex(random_bytes(32));
-                $_SESSION['flash_message'] = 'Obat berhasil ditambahkan.';
+                $_SESSION['flash_message'] =
+                    'Obat berhasil ditambahkan beserta pencatatan stok awal.';
                 $_SESSION['flash_type'] = 'success';
 
                 header('Location: data_obat.php');
                 exit;
             }
-        } catch (PDOException $exception) {
-            error_log('Insert medicine error: ' . $exception->getMessage());
-            $errors[] = 'Obat gagal disimpan. Periksa struktur tabel medicines dan koneksi database.';
+        } catch (Throwable $exception) {
+            if ($connection instanceof PDO && $connection->inTransaction()) {
+                $connection->rollBack();
+            }
+
+            error_log('Insert medicine and initial stock error: ' . $exception->getMessage());
+
+            $errors[] = 'Obat gagal disimpan. Periksa tabel medicines, tabel medicine_transactions, dan koneksi database.';
         }
     }
 }
