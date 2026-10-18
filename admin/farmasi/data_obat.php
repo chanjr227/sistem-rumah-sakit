@@ -591,6 +591,7 @@ try {
                                     <th>Harga</th>
                                     <th>Kedaluwarsa</th>
                                     <th>Status Stok</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
 
@@ -599,7 +600,7 @@ try {
                                 <?php if ($medicines === []): ?>
 
                                     <tr class="obat-empty-row">
-                                        <td colspan="9" class="obat-empty">
+                                        <td colspan="10" class="obat-empty">
 
                                             <div class="obat-empty-icon">
                                                 ▤
@@ -694,6 +695,14 @@ try {
                                                         ? 'Stok Menipis'
                                                         : 'Tersedia' ?>
                                                 </span>
+                                            </td>
+
+                                            <td>
+                                                <a
+                                                    href="edit_obat.php?id=<?= (int) $medicine['id'] ?>"
+                                                    class="btn btn-secondary btn-sm">
+                                                    Edit
+                                                </a>
                                             </td>
 
                                         </tr>
