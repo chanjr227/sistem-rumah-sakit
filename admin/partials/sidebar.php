@@ -1,65 +1,141 @@
 <?php
+
+declare(strict_types=1);
+
 $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
 
+// Deteksi halaman Dokter
 $isDoctorPage = in_array(
     $currentPage,
-    ['data_dokter.php', 'jadwal_dokter.php', 'tambah_dokter.php'],
+    [
+        'data_dokter.php',
+        'jadwal_dokter.php',
+        'tambah_dokter.php'
+    ],
     true
 );
-$sidebarPath = $isDoctorPage ? '' : 'dokter/';
-$dashboardPath = $isDoctorPage ? '../index.php' : 'index.php';
-$homePath = $isDoctorPage ? '../../index.php' : '../index.php';
+
+// Deteksi halaman Farmasi
+$isPharmacyPage = in_array(
+    $currentPage,
+    [
+        'data_obat.php',
+        'tambah_obat.php',
+        'edit_obat.php'
+    ],
+    true
+);
+
+// Deteksi dashboard
+$isDashboardPage = $currentPage === 'index.php'
+    && !$isDoctorPage
+    && !$isPharmacyPage;
+
+// URL absolut berdasarkan folder proyek
+$adminUrl = '/rumah_sakit/admin/';
+$doctorUrl = $adminUrl . 'dokter/';
+$pharmacyUrl = $adminUrl . 'farmasi/';
+$homeUrl = '/rumah_sakit/index.php';
+
 ?>
 
 <aside class="admin-sidebar" id="adminSidebar">
+
     <p class="admin-sidebar-label">Menu Admin</p>
 
-    <nav class="admin-sidebar-nav" aria-label="Navigasi dashboard admin">
+    <nav
+        class="admin-sidebar-nav"
+        aria-label="Navigasi dashboard admin">
 
-        <a href="<?= $dashboardPath ?>#dashboard"
-            class="admin-nav-link <?= $currentPage === 'index.php' ? 'active' : '' ?>"
-            <?= $currentPage === 'index.php' ? 'aria-current="page"' : '' ?>>
+        <!-- DASHBOARD -->
+        <a
+            href="<?= $adminUrl ?>index.php#dashboard"
+            class="admin-nav-link <?= $isDashboardPage ? 'active' : '' ?>"
+            <?= $isDashboardPage ? 'aria-current="page"' : '' ?>>
+
             <span class="admin-nav-icon">⌂</span>
             <span>Dashboard</span>
         </a>
 
-        <div class="admin-nav-group open" data-nav-group>
+        <!-- MENU DOKTER -->
+        <div
+            class="admin-nav-group <?= $isDoctorPage ? 'open' : '' ?>"
+            data-nav-group>
 
             <button
                 type="button"
                 class="admin-nav-parent <?= $isDoctorPage ? 'active' : '' ?>"
-                aria-expanded="true"
+                aria-expanded="<?= $isDoctorPage ? 'true' : 'false' ?>"
                 aria-controls="doctorSubmenu"
                 data-submenu-toggle>
+
                 <span class="admin-nav-icon">✚</span>
                 <span class="admin-nav-text">Dokter</span>
                 <span class="admin-nav-arrow">⌄</span>
             </button>
 
             <div class="admin-submenu" id="doctorSubmenu">
-                <a href="<?= $sidebarPath ?>data_dokter.php"
+
+                <a
+                    href="<?= $doctorUrl ?>data_dokter.php"
                     class="admin-submenu-link <?= $currentPage === 'data_dokter.php' ? 'active' : '' ?>"
                     <?= $currentPage === 'data_dokter.php' ? 'aria-current="page"' : '' ?>>
                     Data Dokter
                 </a>
 
-                <a href="<?= $sidebarPath ?>jadwal_dokter.php"
+                <a
+                    href="<?= $doctorUrl ?>jadwal_dokter.php"
                     class="admin-submenu-link <?= $currentPage === 'jadwal_dokter.php' ? 'active' : '' ?>"
                     <?= $currentPage === 'jadwal_dokter.php' ? 'aria-current="page"' : '' ?>>
                     Jadwal Dokter
                 </a>
 
-                <a href="<?= $sidebarPath ?>tambah_dokter.php"
+                <a
+                    href="<?= $doctorUrl ?>tambah_dokter.php"
                     class="admin-submenu-link <?= $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>"
                     <?= $currentPage === 'tambah_dokter.php' ? 'aria-current="page"' : '' ?>>
                     Tambah Dokter
                 </a>
+
+            </div>
+        </div>
+
+        <!-- MENU FARMASI -->
+        <div
+            class="admin-nav-group <?= $isPharmacyPage ? 'open' : '' ?>"
+            data-nav-group>
+
+            <button
+                type="button"
+                class="admin-nav-parent <?= $isPharmacyPage ? 'active' : '' ?>"
+                aria-expanded="<?= $isPharmacyPage ? 'true' : 'false' ?>"
+                aria-controls="pharmacySubmenu"
+                data-submenu-toggle>
+
+                <span class="admin-nav-icon">⚕</span>
+                <span class="admin-nav-text">Farmasi</span>
+                <span class="admin-nav-arrow">⌄</span>
+            </button>
+
+            <div class="admin-submenu" id="pharmacySubmenu">
+
+                <a
+                    href="<?= $pharmacyUrl ?>data_obat.php"
+                    class="admin-submenu-link <?= $currentPage === 'data_obat.php' ? 'active' : '' ?>"
+                    <?= $currentPage === 'data_obat.php' ? 'aria-current="page"' : '' ?>>
+                    Data Obat
+                </a>
+
             </div>
         </div>
 
     </nav>
 
-    <a class="admin-sidebar-home" href="<?= $homePath ?>">
+    <!-- KEMBALI KE BERANDA -->
+    <a
+        class="admin-sidebar-home"
+        href="<?= $homeUrl ?>">
         Kembali ke beranda
     </a>
+
 </aside>
