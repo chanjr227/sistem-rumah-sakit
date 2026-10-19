@@ -21,7 +21,10 @@ $isPharmacyPage = in_array(
     [
         'data_obat.php',
         'tambah_obat.php',
-        'edit_obat.php'
+        'edit_obat.php',
+        'transaksi_stok.php',
+        'obat_kedaluwarsa.php',
+        'laporan_farmasi.php'
     ],
     true
 );
@@ -142,6 +145,13 @@ $homeUrl = '/rumah_sakit/index.php';
                     class="admin-submenu-link <?= $currentPage === 'obat_kedaluwarsa.php' ? 'active' : '' ?>"
                     <?= $currentPage === 'obat_kedaluwarsa.php' ? 'aria-current="page"' : '' ?>>
                     Obat Kedaluwarsa
+                </a>
+
+                <a
+                    href="<?= $pharmacyUrl ?>laporan_farmasi.php"
+                    class="admin-submenu-link <?= $currentPage === 'laporan_farmasi.php' ? 'active' : '' ?>"
+                    <?= $currentPage === 'laporan_farmasi.php' ? 'aria-current="page"' : '' ?>>
+                    Laporan Farmasi
                 </a>
 
             </div>
