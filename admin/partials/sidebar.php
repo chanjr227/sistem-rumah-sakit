@@ -137,6 +137,13 @@ $homeUrl = '/rumah_sakit/index.php';
                     Stok Keluar
                 </a>
 
+                <a
+                    href="<?= $pharmacyUrl ?>obat_kedaluwarsa.php"
+                    class="admin-submenu-link <?= $currentPage === 'obat_kedaluwarsa.php' ? 'active' : '' ?>"
+                    <?= $currentPage === 'obat_kedaluwarsa.php' ? 'aria-current="page"' : '' ?>>
+                    Obat Kedaluwarsa
+                </a>
+
             </div>
         </div>
 
