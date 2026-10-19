@@ -62,6 +62,10 @@ $isPatientPage = $isPatientDirectory && in_array(
     true
 );
 
+// Deteksi halaman Detail Pasien
+$isPatientDetail = $isPatientDirectory
+    && $currentPage === 'detail_pasien.php';
+
 // Deteksi Dashboard
 $isDashboardPage = !$isPatientDirectory
     && !$isPharmacyDirectory

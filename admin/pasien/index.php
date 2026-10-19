@@ -64,18 +64,7 @@ $fields = [
         'required' => true,
         'aliases' => ['name', 'nama', 'nama_pasien'],
     ],
-    'email' => [
-        'label' => 'Email',
-        'type' => 'email',
-        'required' => true,
-        'aliases' => ['email'],
-    ],
-    'nik' => [
-        'label' => 'NIK',
-        'type' => 'text',
-        'required' => false,
-        'aliases' => ['nik', 'no_nik'],
-    ],
+
     'medical_record_number' => [
         'label' => 'Nomor rekam medis',
         'type' => 'text',
@@ -87,6 +76,21 @@ $fields = [
             'no_rm',
         ],
     ],
+
+    'nik' => [
+        'label' => 'NIK',
+        'type' => 'text',
+        'required' => false,
+        'aliases' => ['nik', 'no_nik'],
+    ],
+
+    'email' => [
+        'label' => 'Email',
+        'type' => 'email',
+        'required' => true,
+        'aliases' => ['email'],
+    ],
+
     'phone' => [
         'label' => 'Nomor telepon',
         'type' => 'tel',
@@ -98,12 +102,14 @@ $fields = [
             'phone_number',
         ],
     ],
+
     'gender' => [
         'label' => 'Jenis kelamin',
         'type' => 'select',
         'required' => false,
         'aliases' => ['gender', 'jenis_kelamin'],
     ],
+
     'date_of_birth' => [
         'label' => 'Tanggal lahir',
         'type' => 'date',
@@ -114,8 +120,9 @@ $fields = [
             'birth_date',
         ],
     ],
+
     'address' => [
-        'label' => 'Alamat',
+        'label' => 'Alamat lengkap',
         'type' => 'textarea',
         'required' => false,
         'aliases' => ['address', 'alamat'],
@@ -146,13 +153,15 @@ $csrfToken = adminCsrfToken();
 
 /*
 |--------------------------------------------------------------------------
-| PROSES DATA
+| PROSES DATABASE
 |--------------------------------------------------------------------------
 */
 
 try {
     /*
-    | Deteksi kolom tabel patients
+    |--------------------------------------------------------------------------
+    | DETEKSI KOLOM DATABASE
+    |--------------------------------------------------------------------------
     */
 
     $columnRows = $connection
@@ -193,7 +202,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | TAMBAH DAN EDIT PASIEN
+    | SIMPAN TAMBAH / EDIT PASIEN
     |--------------------------------------------------------------------------
     */
 
@@ -206,9 +215,7 @@ try {
             );
         }
 
-        $action = $_POST['action'] ?? '';
-
-        if ($action !== 'save') {
+        if (($_POST['action'] ?? '') !== 'save') {
             throw new InvalidArgumentException(
                 'Aksi yang diminta tidak dikenal.'
             );
@@ -224,7 +231,9 @@ try {
         }
 
         /*
-        | Ambil nilai form dan validasi
+        |--------------------------------------------------------------------------
+        | VALIDASI INPUT
+        |--------------------------------------------------------------------------
         */
 
         foreach ($mappedFields as $key => $column) {
@@ -249,8 +258,7 @@ try {
 
             if (mb_strlen($value, 'UTF-8') > 1000) {
                 throw new InvalidArgumentException(
-                    $fields[$key]['label']
-                        . ' terlalu panjang.'
+                    $fields[$key]['label'] . ' terlalu panjang.'
                 );
             }
 
@@ -324,7 +332,9 @@ try {
         }
 
         /*
-        | Validasi data unik
+        |--------------------------------------------------------------------------
+        | CEK EMAIL, NIK, DAN NOMOR RM DUPLIKAT
+        |--------------------------------------------------------------------------
         */
 
         foreach (
@@ -364,17 +374,31 @@ try {
         }
 
         /*
-        | Susun data berdasarkan kolom yang tersedia
+        |--------------------------------------------------------------------------
+        | SUSUN DATA UNTUK DATABASE
+        |--------------------------------------------------------------------------
         */
 
         $data = [];
 
         foreach ($mappedFields as $key => $column) {
-            $data[$column] = $formValues[$key] ?? '';
+            $value = $formValues[$key] ?? '';
+
+            // Kolom DATE harus NULL jika tidak diisi.
+            if (
+                $key === 'date_of_birth'
+                && $value === ''
+            ) {
+                $value = null;
+            }
+
+            $data[$column] = $value;
         }
 
         /*
-        | Password sementara untuk pasien baru
+        |--------------------------------------------------------------------------
+        | PASSWORD SEMENTARA UNTUK PASIEN BARU
+        |--------------------------------------------------------------------------
         */
 
         if (
@@ -390,7 +414,9 @@ try {
         }
 
         /*
-        | Update pasien
+        |--------------------------------------------------------------------------
+        | UPDATE PASIEN
+        |--------------------------------------------------------------------------
         */
 
         if ($formId !== null) {
@@ -429,7 +455,9 @@ try {
             ];
         } else {
             /*
-            | Insert pasien baru
+            |--------------------------------------------------------------------------
+            | INSERT PASIEN BARU
+            |--------------------------------------------------------------------------
             */
 
             $insertColumns = array_keys($data);
@@ -460,35 +488,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | DETAIL PASIEN
-    |--------------------------------------------------------------------------
-    */
-
-    if (isset($_GET['detail'])) {
-        $detailId = pasienValidId($_GET['detail']);
-
-        $statement = $connection->prepare(
-            'SELECT *
-             FROM `patients`
-             WHERE `id` = :id'
-        );
-
-        $statement->execute(['id' => $detailId]);
-
-        $patient = $statement->fetch(PDO::FETCH_ASSOC);
-
-        if (!$patient) {
-            throw new InvalidArgumentException(
-                'Data pasien tidak ditemukan.'
-            );
-        }
-
-        $mode = 'detail';
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | EDIT PASIEN
+    | TAMPILKAN FORM EDIT
     |--------------------------------------------------------------------------
     */ elseif (isset($_GET['edit'])) {
         $formId = pasienValidId($_GET['edit']);
@@ -521,7 +521,7 @@ try {
 
     /*
     |--------------------------------------------------------------------------
-    | TAMBAH PASIEN
+    | TAMPILKAN FORM TAMBAH
     |--------------------------------------------------------------------------
     */ elseif (isset($_GET['tambah'])) {
         $mode = 'form';
@@ -579,27 +579,25 @@ try {
         $statement = $connection->prepare($sql);
         $statement->execute($params);
 
-        $patients = $statement->fetchAll(
-            PDO::FETCH_ASSOC
-        );
+        $patients = $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 } catch (InvalidArgumentException $exception) {
     $errors[] = $exception->getMessage();
-} catch (RuntimeException $exception) {
-    $errors[] = $exception->getMessage();
 } catch (PDOException $exception) {
     error_log(
-        'Admin patients error: '
+        'Admin patients database error: '
             . $exception->getMessage()
     );
 
     $errors[] = 'Data pasien gagal diproses. '
         . 'Periksa struktur tabel dan koneksi database.';
+} catch (RuntimeException $exception) {
+    $errors[] = $exception->getMessage();
 }
 
 /*
 |--------------------------------------------------------------------------
-| PERTAHANKAN ISI FORM JIKA TERJADI ERROR
+| PERTAHANKAN INPUT JIKA VALIDASI GAGAL
 |--------------------------------------------------------------------------
 */
 
@@ -619,6 +617,24 @@ if (
 
     if ($formId !== null) {
         $formAction = 'Perbarui Pasien';
+
+        // Ambil kembali data asli agar ID tetap valid.
+        if ($patient === null) {
+            try {
+                $statement = $connection->prepare(
+                    'SELECT *
+                     FROM `patients`
+                     WHERE `id` = :id'
+                );
+
+                $statement->execute(['id' => $formId]);
+
+                $patient = $statement->fetch(PDO::FETCH_ASSOC)
+                    ?: null;
+            } catch (PDOException $exception) {
+                error_log($exception->getMessage());
+            }
+        }
     } else {
         $formAction = 'Tambah Pasien';
     }
@@ -636,7 +652,12 @@ $isEditing = $formId !== null;
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
 
-    <title>Data Pasien - RS Medika Sehat</title>
+    <title>
+        <?= $mode === 'form'
+            ? pasienEscape($formAction)
+            : 'Data Pasien' ?>
+        - RS Medika Sehat
+    </title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect"
@@ -703,6 +724,7 @@ $isEditing = $formId !== null;
             gap: 7px;
             font-size: 13px;
             font-weight: 600;
+            color: #173b43;
         }
 
         .patient-form-grid input,
@@ -719,8 +741,15 @@ $isEditing = $formId !== null;
             color: #173b43;
         }
 
+        .patient-form-grid input:focus,
+        .patient-form-grid select:focus,
+        .patient-form-grid textarea:focus {
+            outline: 2px solid #a5e3df;
+            border-color: #087e80;
+        }
+
         .patient-form-grid textarea {
-            min-height: 100px;
+            min-height: 110px;
             resize: vertical;
         }
 
@@ -745,32 +774,6 @@ $isEditing = $formId !== null;
             color: #176c4b;
         }
 
-        .patient-detail-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .patient-detail-item {
-            padding: 14px;
-            border-radius: 9px;
-            background: #f5f9fa;
-            overflow-wrap: anywhere;
-        }
-
-        .patient-detail-item span {
-            display: block;
-            color: #758b91;
-            font-size: 11px;
-            margin-bottom: 6px;
-        }
-
-        .patient-detail-item strong {
-            font-size: 14px;
-            color: #173b43;
-            overflow-wrap: anywhere;
-        }
-
         .patient-table-wrap {
             width: 100%;
             overflow-x: auto;
@@ -787,15 +790,41 @@ $isEditing = $formId !== null;
             color: #667085;
         }
 
-        @media (max-width: 700px) {
+        .patient-form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-top: 24px;
+        }
 
-            .patient-form-grid,
-            .patient-detail-grid {
+        .patient-required {
+            color: #c0392b;
+        }
+
+        .patient-form-note {
+            color: #758b91;
+            font-size: 12px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 700px) {
+            .patient-form-grid {
                 grid-template-columns: 1fr;
             }
 
             .patient-full {
                 grid-column: auto;
+            }
+
+            .patient-form-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .patient-form-actions .btn {
+                text-align: center;
+                justify-content: center;
             }
         }
     </style>
@@ -812,14 +841,15 @@ $isEditing = $formId !== null;
         <main class="admin-main" id="dashboard">
 
             <!-- JUDUL HALAMAN -->
+
             <div class="admin-page-heading">
                 <div>
                     <p class="eyebrow">Manajemen rumah sakit</p>
 
                     <h1>
-                        <?= $mode === 'detail'
-                            ? 'Detail Pasien'
-                            : pasienEscape($formAction) ?>
+                        <?= $mode === 'form'
+                            ? pasienEscape($formAction)
+                            : 'Data Pasien' ?>
                     </h1>
 
                     <p class="admin-intro">
@@ -829,7 +859,8 @@ $isEditing = $formId !== null;
                 </div>
 
                 <?php if ($mode === 'list'): ?>
-                    <a class="btn btn-primary"
+                    <a
+                        class="btn btn-primary"
                         href="index.php?tambah=1">
                         + Tambah Pasien
                     </a>
@@ -837,6 +868,7 @@ $isEditing = $formId !== null;
             </div>
 
             <!-- PESAN BERHASIL -->
+
             <?php if (
                 is_array($notice)
                 && isset($notice['message'])
@@ -850,6 +882,7 @@ $isEditing = $formId !== null;
             <?php endif; ?>
 
             <!-- PESAN ERROR -->
+
             <?php foreach (array_unique($errors) as $error): ?>
                 <div
                     class="patient-message patient-error"
@@ -862,6 +895,7 @@ $isEditing = $formId !== null;
             <!-- ==================================================
                  DAFTAR PASIEN
             =================================================== -->
+
             <?php if ($mode === 'list'): ?>
 
                 <section class="admin-panel">
@@ -902,6 +936,7 @@ $isEditing = $formId !== null;
                     </p>
 
                     <div class="patient-table-wrap">
+
                         <table class="admin-table patient-table">
 
                             <thead>
@@ -910,11 +945,9 @@ $isEditing = $formId !== null;
                                     <th>Nama Pasien</th>
 
                                     <?php if (
-                                        isset(
-                                            $mappedFields['medical_record_number']
-                                        )
+                                        isset($mappedFields['medical_record_number'])
                                     ): ?>
-                                        <th>No. Rekam Medis</th>
+                                        <th>Nomor Rekam Medis</th>
                                     <?php endif; ?>
 
                                     <th>Email</th>
@@ -922,7 +955,7 @@ $isEditing = $formId !== null;
                                     <?php if (
                                         isset($mappedFields['phone'])
                                     ): ?>
-                                        <th>Telepon</th>
+                                        <th>Nomor Telepon</th>
                                     <?php endif; ?>
 
                                     <th>Aksi</th>
@@ -932,20 +965,22 @@ $isEditing = $formId !== null;
                             <tbody>
 
                                 <?php if ($patients === []): ?>
+
                                     <tr>
                                         <td
                                             colspan="6"
                                             class="patient-empty">
-
                                             Belum ada data pasien
                                             yang ditemukan.
                                         </td>
                                     </tr>
+
                                 <?php else: ?>
 
                                     <?php foreach (
                                         $patients as $index => $row
                                     ): ?>
+
                                         <tr>
                                             <td>
                                                 <?= $index + 1 ?>
@@ -960,9 +995,7 @@ $isEditing = $formId !== null;
                                             </td>
 
                                             <?php if (
-                                                isset(
-                                                    $mappedFields['medical_record_number']
-                                                )
+                                                isset($mappedFields['medical_record_number'])
                                             ): ?>
                                                 <td>
                                                     <?= pasienEscape(
@@ -992,7 +1025,7 @@ $isEditing = $formId !== null;
 
                                                     <a
                                                         class="patient-link"
-                                                        href="index.php?detail=<?= (int) $row['id'] ?>">
+                                                        href="detail_pasien.php?id=<?= (int) $row['id'] ?>">
                                                         Detail
                                                     </a>
 
@@ -1005,11 +1038,13 @@ $isEditing = $formId !== null;
                                                 </div>
                                             </td>
                                         </tr>
+
                                     <?php endforeach; ?>
 
                                 <?php endif; ?>
 
                             </tbody>
+
                         </table>
                     </div>
 
@@ -1018,16 +1053,25 @@ $isEditing = $formId !== null;
                 <!-- ==================================================
                  FORM TAMBAH / EDIT PASIEN
             =================================================== -->
+
             <?php elseif ($mode === 'form'): ?>
 
                 <section class="admin-panel">
 
                     <h2><?= pasienEscape($formAction) ?></h2>
 
+                    <p class="admin-intro">
+                        <?= $isEditing
+                            ? 'Perbarui informasi pasien pada formulir berikut.'
+                            : 'Masukkan informasi pasien untuk menambahkan data baru.' ?>
+                    </p>
+
                     <form
                         class="admin-form"
                         method="post"
-                        action="index.php">
+                        action="index.php<?= $isEditing
+                                                ? '?edit=' . (int) $formId
+                                                : '?tambah=1' ?>">
 
                         <input
                             type="hidden"
@@ -1058,15 +1102,20 @@ $isEditing = $formId !== null;
                                 $value = $formValues[$key]
                                     ?? ($patient[$column] ?? '');
 
-                                $isFull = $definition['type'] === 'textarea';
+                                $isFull =
+                                    $definition['type'] === 'textarea';
                                 ?>
 
                                 <label
                                     class="<?= $isFull ? 'patient-full' : '' ?>">
 
-                                    <?= pasienEscape(
-                                        $definition['label']
-                                    ) ?>
+                                    <span>
+                                        <?= pasienEscape($definition['label']) ?>
+
+                                        <?php if ($definition['required']): ?>
+                                            <span class="patient-required">*</span>
+                                        <?php endif; ?>
+                                    </span>
 
                                     <?php if (
                                         $definition['type'] === 'textarea'
@@ -1075,6 +1124,9 @@ $isEditing = $formId !== null;
                                         <textarea
                                             name="<?= pasienEscape($key) ?>"
                                             maxlength="1000"
+                                            placeholder="Masukkan <?= pasienEscape(
+                                                                        strtolower($definition['label'])
+                                                                    ) ?>"
                                             <?= $definition['required']
                                                 ? 'required'
                                                 : '' ?>><?= pasienEscape($value) ?></textarea>
@@ -1083,38 +1135,42 @@ $isEditing = $formId !== null;
                                         $definition['type'] === 'select'
                                     ): ?>
 
-                                        <select
-                                            name="<?= pasienEscape($key) ?>">
+                                        <select name="<?= pasienEscape($key) ?>">
 
                                             <option value="">
                                                 Pilih jenis kelamin
                                             </option>
 
-                                            <?php foreach (
-                                                ['Laki-laki', 'Perempuan'] as $option
-                                            ): ?>
-                                                <option
-                                                    value="<?= pasienEscape($option) ?>"
-                                                    <?= in_array(
-                                                        $value,
-                                                        $option === 'Laki-laki'
-                                                            ? ['Laki-laki', 'L']
-                                                            : ['Perempuan', 'P'],
-                                                        true
-                                                    ) ? 'selected' : '' ?>>
+                                            <?php
+                                            $genderValue = match ($value) {
+                                                'L' => 'Laki-laki',
+                                                'P' => 'Perempuan',
+                                                default => $value,
+                                            };
+                                            ?>
 
-                                                    <?= pasienEscape($option) ?>
-                                                </option>
-                                            <?php endforeach; ?>
+                                            <option
+                                                value="Laki-laki"
+                                                <?= $genderValue === 'Laki-laki'
+                                                    ? 'selected'
+                                                    : '' ?>>
+                                                Laki-laki
+                                            </option>
+
+                                            <option
+                                                value="Perempuan"
+                                                <?= $genderValue === 'Perempuan'
+                                                    ? 'selected'
+                                                    : '' ?>>
+                                                Perempuan
+                                            </option>
 
                                         </select>
 
                                     <?php else: ?>
 
                                         <input
-                                            type="<?= pasienEscape(
-                                                        $definition['type']
-                                                    ) ?>"
+                                            type="<?= pasienEscape($definition['type']) ?>"
                                             name="<?= pasienEscape($key) ?>"
                                             value="<?= pasienEscape(
                                                         $definition['type'] === 'date'
@@ -1122,9 +1178,22 @@ $isEditing = $formId !== null;
                                                             : $value
                                                     ) ?>"
                                             maxlength="1000"
+                                            <?= $key === 'nik'
+                                                ? 'inputmode="numeric" pattern="[0-9]{16}"'
+                                                : '' ?>
                                             <?= $definition['required']
                                                 ? 'required'
-                                                : '' ?>>
+                                                : '' ?>
+                                            <?= $key === 'date_of_birth'
+                                                ? 'max="' . date('Y-m-d') . '"'
+                                                : '' ?>
+                                            placeholder="<?= $key === 'nik'
+                                                                ? 'Masukkan 16 digit NIK'
+                                                                : (
+                                                                    $definition['type'] === 'date'
+                                                                    ? ''
+                                                                    : 'Masukkan ' . strtolower($definition['label'])
+                                                                ) ?>">
 
                                     <?php endif; ?>
 
@@ -1134,100 +1203,29 @@ $isEditing = $formId !== null;
 
                         </div>
 
-                        <div
-                            class="admin-form-actions"
-                            style="margin-top:22px">
+                        <p class="patient-form-note">
+                            Kolom bertanda
+                            <span class="patient-required">*</span>
+                            wajib diisi.
+                        </p>
+
+                        <div class="patient-form-actions">
 
                             <button
                                 class="btn btn-primary"
                                 type="submit">
-
                                 <?= pasienEscape($formAction) ?>
                             </button>
 
                             <a
                                 class="btn btn-secondary"
                                 href="index.php">
-
                                 Batal
                             </a>
 
                         </div>
 
                     </form>
-
-                </section>
-
-                <!-- ==================================================
-                 DETAIL PASIEN
-            =================================================== -->
-            <?php elseif (
-                $mode === 'detail'
-                && $patient !== null
-            ): ?>
-
-                <section class="admin-panel">
-
-                    <h2>Informasi Pasien</h2>
-
-                    <div class="patient-detail-grid">
-
-                        <div class="patient-detail-item">
-                            <span>ID Pasien</span>
-                            <strong>
-                                <?= (int) $patient['id'] ?>
-                            </strong>
-                        </div>
-
-                        <?php foreach (
-                            $mappedFields as $key => $column
-                        ): ?>
-
-                            <?php
-                            $detailValue = trim(
-                                (string) ($patient[$column] ?? '')
-                            );
-                            ?>
-
-                            <div class="patient-detail-item">
-
-                                <span>
-                                    <?= pasienEscape(
-                                        $fields[$key]['label']
-                                    ) ?>
-                                </span>
-
-                                <strong>
-                                    <?= $detailValue !== ''
-                                        ? pasienEscape($detailValue)
-                                        : 'Belum diisi' ?>
-                                </strong>
-
-                            </div>
-
-                        <?php endforeach; ?>
-
-                    </div>
-
-                    <div
-                        class="admin-form-actions"
-                        style="margin-top:22px">
-
-                        <a
-                            class="btn btn-primary"
-                            href="index.php?edit=<?= (int) $patient['id'] ?>">
-
-                            Edit Data
-                        </a>
-
-                        <a
-                            class="btn btn-secondary"
-                            href="index.php">
-
-                            Kembali ke Daftar
-                        </a>
-
-                    </div>
 
                 </section>
 
