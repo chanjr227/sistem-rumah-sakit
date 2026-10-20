@@ -59,9 +59,14 @@ $isPatientPage = $isPatientDirectory && in_array(
         'edit_pasien.php',
         'detail_pasien.php',
         'riwayat_kunjungan.php',
+        'rekam_medis.php',
     ],
     true
 );
+
+// Deteksi halaman Rekam Medis
+$isMedicalRecordPage = $isPatientDirectory
+    && $currentPage === 'rekam_medis.php';
 
 // Deteksi halaman Detail Pasien
 $isPatientDetail = $isPatientDirectory
@@ -233,6 +238,13 @@ $homeUrl = '/rumah_sakit/index.php';
                     class="admin-submenu-link <?= $isVisitHistory ? 'active' : '' ?>"
                     <?= $isVisitHistory ? 'aria-current="page"' : '' ?>>
                     Riwayat Kunjungan
+                </a>
+
+                <a
+                    href="<?= $patientUrl ?>rekam_medis.php"
+                    class="admin-submenu-link <?= $isMedicalRecordPage ? 'active' : '' ?>"
+                    <?= $isMedicalRecordPage ? 'aria-current="page"' : '' ?>>
+                    Rekam Medis
                 </a>
 
             </div>
