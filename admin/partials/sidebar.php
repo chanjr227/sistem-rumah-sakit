@@ -58,6 +58,7 @@ $isPatientPage = $isPatientDirectory && in_array(
         'tambah_pasien.php',
         'edit_pasien.php',
         'detail_pasien.php',
+        'riwayat_kunjungan.php',
     ],
     true
 );
@@ -65,6 +66,10 @@ $isPatientPage = $isPatientDirectory && in_array(
 // Deteksi halaman Detail Pasien
 $isPatientDetail = $isPatientDirectory
     && $currentPage === 'detail_pasien.php';
+
+// Deteksi halaman Riwayat Kunjungan
+$isVisitHistory = $isPatientDirectory
+    && $currentPage === 'riwayat_kunjungan.php';
 
 // Deteksi Dashboard
 $isDashboardPage = !$isPatientDirectory
@@ -223,6 +228,12 @@ $homeUrl = '/rumah_sakit/index.php';
                     Data Pasien
                 </a>
 
+                <a
+                    href="<?= $patientUrl ?>riwayat_kunjungan.php"
+                    class="admin-submenu-link <?= $isVisitHistory ? 'active' : '' ?>"
+                    <?= $isVisitHistory ? 'aria-current="page"' : '' ?>>
+                    Riwayat Kunjungan
+                </a>
 
             </div>
         </div>
