@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/auth.php';
-
 require_once __DIR__ . '/../config/database.php';
 
 startAdminSession();
@@ -11,102 +10,109 @@ startAdminSession();
 $errorMessage = '';
 $invalidCredentials = false;
 $loginSuccess = false;
+
 $redirectUrl = '/rumah_sakit/admin/index.php';
 $welcomeMessage = 'Selamat datang kembali, Admin.';
 
-// Jika sudah login, arahkan berdasarkan jenis akun.
+/**
+ * Tentukan halaman awal berdasarkan role akun.
+ */
+function getRoleRedirect(string $role): string
+{
+  return match ($role) {
+    'admin' => '/rumah_sakit/admin/index.php',
+    'dokter' => '/rumah_sakit/admin/dokter/input_rekam_medis.php',
+    'perawat' => '/rumah_sakit/admin/perawat/index.php',
+    'farmasi' => '/rumah_sakit/admin/farmasi/data_obat.php',
+    default => '/rumah_sakit/admin/index.php',
+  };
+}
 
+function getRoleWelcome(string $role): string
+{
+  return match ($role) {
+    'admin' => 'Selamat datang kembali, Admin.',
+    'dokter' => 'Selamat datang kembali, Dokter.',
+    'perawat' => 'Selamat datang kembali, Perawat.',
+    'farmasi' => 'Selamat datang kembali, Petugas Farmasi.',
+    default => 'Selamat datang kembali.',
+  };
+}
+
+/**
+ * Jika sudah login, arahkan sesuai role.
+ */
 if (!empty($_SESSION['admin_authenticated'])) {
+  $currentRole = (string) ($_SESSION['account_role'] ?? '');
 
-  if (($_SESSION['account_role'] ?? '') === 'dokter') {
-
-    header('Location: /rumah_sakit/admin/dokter/input_rekam_medis.php');
-  } else {
-
-    header('Location: /rumah_sakit/admin/index.php');
-  }
-
+  header('Location: ' . getRoleRedirect($currentRole));
   exit;
 }
 
-// Proses login.
-
+/**
+ * Proses login.
+ */
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
   if (!verifyAdminCsrfToken()) {
-
     http_response_code(403);
-
     $errorMessage = 'Sesi formulir tidak valid. Muat ulang halaman dan coba lagi.';
   } else {
 
     $usernameValue = $_POST['username'] ?? '';
-
     $passwordValue = $_POST['password'] ?? '';
 
     $username = is_string($usernameValue) ? trim($usernameValue) : '';
-
     $password = is_string($passwordValue) ? $passwordValue : '';
 
     if ($username === '' || $password === '') {
-
       http_response_code(422);
-
       $errorMessage = 'Nama pengguna dan kata sandi wajib diisi.';
     } else {
 
       try {
-
         $connection = getDatabaseConnection();
 
         $statement = $connection->prepare(
-
           'SELECT id, username, password_hash, role, doctor_id
-
                      FROM admins
-
                      WHERE username = :username
-
                      LIMIT 1'
-
         );
 
         $statement->execute([
-
           'username' => $username,
-
         ]);
 
         $account = $statement->fetch(PDO::FETCH_ASSOC);
 
+        $allowedRoles = [
+          'admin',
+          'dokter',
+          'perawat',
+          'farmasi',
+        ];
+
         $validAccount = (
-
           is_array($account)
-
-          && isset($account['password_hash'], $account['role'])
-
+          && isset(
+            $account['id'],
+            $account['password_hash'],
+            $account['role']
+          )
+          && in_array(
+            (string) $account['role'],
+            $allowedRoles,
+            true
+          )
           && password_verify(
-
             $password,
-
             (string) $account['password_hash']
-
           )
-
           && (
-
-            $account['role'] === 'admin'
-
-            || (
-
-              $account['role'] === 'dokter'
-
-              && !empty($account['doctor_id'])
-
-            )
-
+            $account['role'] !== 'dokter'
+            || !empty($account['doctor_id'])
           )
-
         );
 
         if ($validAccount) {
@@ -114,49 +120,36 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
           session_regenerate_id(true);
 
           $_SESSION['admin_authenticated'] = true;
-
           $_SESSION['admin_id'] = (int) $account['id'];
-
           $_SESSION['admin_username'] = (string) $account['username'];
-
           $_SESSION['account_role'] = (string) $account['role'];
 
+          // Hubungkan akun dokter dengan data dokter.
           if ($account['role'] === 'dokter') {
-
             $_SESSION['doctor_id'] = (int) $account['doctor_id'];
           } else {
-
             unset($_SESSION['doctor_id']);
           }
 
-          // Tentukan tujuan dan pesan sesuai jenis akun.
-          if ($account['role'] === 'dokter') {
-            $redirectUrl = '/rumah_sakit/admin/dokter/input_rekam_medis.php';
-            $welcomeMessage = 'Selamat datang kembali, Dokter.';
-          } else {
-            unset($_SESSION['doctor_id']);
-            $redirectUrl = '/rumah_sakit/admin/index.php';
-            $welcomeMessage = 'Selamat datang kembali, Admin.';
-          }
+          // Tentukan tujuan dan pesan sesuai role.
+          $role = (string) $account['role'];
 
-          // Hapus token lama. Token baru dibuat jika diperlukan.
+          $redirectUrl = getRoleRedirect($role);
+          $welcomeMessage = getRoleWelcome($role);
+
+          // Hapus token CSRF lama setelah login berhasil.
           unset($_SESSION['admin_csrf_token']);
 
-          // Tampilkan animasi login berhasil sebelum diarahkan.
           $loginSuccess = true;
+        } else {
+          http_response_code(401);
+          $invalidCredentials = true;
+          $errorMessage = 'Nama pengguna atau kata sandi tidak sesuai.';
         }
-
-        http_response_code(401);
-
-        $invalidCredentials = true;
-
-        $errorMessage = 'Nama pengguna atau kata sandi tidak sesuai.';
       } catch (PDOException $exception) {
 
         error_log(
-
           'Login database error: ' . $exception->getMessage()
-
         );
 
         http_response_code(503);
@@ -295,7 +288,7 @@ $csrfToken = adminCsrfToken();
 
           <span class="admin-visual-tag">
 
-            <span></span> ADMINISTRATOR & DOKTER PORTAL
+            <span></span> HOSPITAL MANAGEMENT PORTAL
 
           </span>
 
@@ -303,9 +296,8 @@ $csrfToken = adminCsrfToken();
 
           <p>
 
-            Akses panel administrator untuk mengelola data dokter
-
-            dan mendukung pelayanan RS Medika Sehat.
+            Akses sistem RS Medika Sehat sesuai hak akun
+            Admin, Dokter, Perawat, atau Farmasi.
 
           </p>
 
