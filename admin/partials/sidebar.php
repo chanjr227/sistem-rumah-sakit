@@ -3,11 +3,20 @@
 declare(strict_types=1);
 
 $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
+
 $currentScript = str_replace(
     '\\',
     '/',
     $_SERVER['SCRIPT_NAME'] ?? ''
 );
+
+// URL navigasi: definisikan terlebih dahulu
+$adminUrl = '/rumah_sakit/admin/';
+$doctorUrl = $adminUrl . 'dokter/';
+$pharmacyUrl = $adminUrl . 'farmasi/';
+$patientUrl = $adminUrl . 'pasien/';
+$nurseUrl = $adminUrl . 'perawat/';
+$homeUrl = '/rumah_sakit/index.php';
 
 // Deteksi lokasi halaman
 $isPatientDirectory = str_contains(
@@ -25,6 +34,11 @@ $isDoctorDirectory = str_contains(
     '/admin/dokter/'
 );
 
+$isNurseDirectory = str_contains(
+    $currentScript,
+    '/admin/perawat/'
+);
+
 // Deteksi halaman Dokter
 $isDoctorPage = $isDoctorDirectory && in_array(
     $currentPage,
@@ -33,6 +47,21 @@ $isDoctorPage = $isDoctorDirectory && in_array(
         'jadwal_dokter.php',
         'tambah_dokter.php',
         'input_rekam_medis.php',
+    ],
+    true
+);
+
+// Deteksi halaman Perawat
+$isNursePage = $isNurseDirectory && in_array(
+    $currentPage,
+    [
+        'index.php',
+        'data_pasien.php',
+        'detail_pasien.php',
+        'pemeriksaan.php',
+        'catatan_keperawatan.php',
+        'pemantauan_pasien.php',
+        'laporan.php',
     ],
     true
 );
@@ -77,10 +106,11 @@ $isPatientDetail = $isPatientDirectory
 $isVisitHistory = $isPatientDirectory
     && $currentPage === 'riwayat_kunjungan.php';
 
-// Deteksi Dashboard
+// Deteksi Dashboard Admin
 $isDashboardPage = !$isPatientDirectory
     && !$isPharmacyDirectory
     && !$isDoctorDirectory
+    && !$isNurseDirectory
     && $currentPage === 'index.php';
 
 // Deteksi halaman Pengaturan Akun
@@ -88,13 +118,6 @@ $isSettingsPage = str_contains(
     $currentScript,
     '/admin/pengaturan/'
 );
-
-// URL navigasi
-$adminUrl = '/rumah_sakit/admin/';
-$doctorUrl = $adminUrl . 'dokter/';
-$pharmacyUrl = $adminUrl . 'farmasi/';
-$patientUrl = $adminUrl . 'pasien/';
-$homeUrl = '/rumah_sakit/index.php';
 
 ?>
 
@@ -221,30 +244,65 @@ $homeUrl = '/rumah_sakit/index.php';
             </div>
         </div>
 
-        <!-- PASIEN -->
+        <!-- PERAWAT -->
         <div
-            class="admin-nav-group <?= $isPatientPage ? 'open' : '' ?>"
+            class="admin-nav-group <?= $isNursePage ? 'open' : '' ?>"
             data-nav-group>
 
             <button
                 type="button"
-                class="admin-nav-parent <?= $isPatientPage ? 'active' : '' ?>"
-                aria-expanded="<?= $isPatientPage ? 'true' : 'false' ?>"
-                aria-controls="patientSubmenu"
+                class="admin-nav-parent <?= $isNursePage ? 'active' : '' ?>"
+                aria-expanded="<?= $isNursePage ? 'true' : 'false' ?>"
+                aria-controls="nurseSubmenu"
                 data-submenu-toggle>
 
-                <span class="admin-nav-icon">♙</span>
-                <span class="admin-nav-text">Pasien</span>
+                <span class="admin-nav-icon">✚</span>
+                <span class="admin-nav-text">Perawat</span>
                 <span class="admin-nav-arrow">⌄</span>
             </button>
 
-            <div class="admin-submenu" id="patientSubmenu">
+            <div class="admin-submenu" id="nurseSubmenu">
 
                 <a
-                    href="<?= $patientUrl ?>index.php"
-                    class="admin-submenu-link <?= $isPatientPage && $currentPage === 'index.php' ? 'active' : '' ?>"
-                    <?= $isPatientPage && $currentPage === 'index.php' ? 'aria-current="page"' : '' ?>>
+                    href="<?= $nurseUrl ?>index.php"
+                    class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'index.php' ? 'active' : '' ?>"
+                    <?= $isNurseDirectory && $currentPage === 'index.php' ? 'aria-current="page"' : '' ?>>
+                    Dashboard Perawat
+                </a>
+
+                <a
+                    href="<?= $nurseUrl ?>data_pasien.php"
+                    class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'data_pasien.php' ? 'active' : '' ?>"
+                    <?= $isNurseDirectory && $currentPage === 'data_pasien.php' ? 'aria-current="page"' : '' ?>>
                     Data Pasien
+                </a>
+
+                <a
+                    href="<?= $nurseUrl ?>pemeriksaan.php"
+                    class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'pemeriksaan.php' ? 'active' : '' ?>"
+                    <?= $isNurseDirectory && $currentPage === 'pemeriksaan.php' ? 'aria-current="page"' : '' ?>>
+                    Pemeriksaan Pasien
+                </a>
+
+                <a
+                    href="<?= $nurseUrl ?>catatan_keperawatan.php"
+                    class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'catatan_keperawatan.php' ? 'active' : '' ?>"
+                    <?= $isNurseDirectory && $currentPage === 'catatan_keperawatan.php' ? 'aria-current="page"' : '' ?>>
+                    Catatan Keperawatan
+                </a>
+
+                <a
+                    href="<?= $nurseUrl ?>pemantauan_pasien.php"
+                    class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'pemantauan_pasien.php' ? 'active' : '' ?>"
+                    <?= $isNurseDirectory && $currentPage === 'pemantauan_pasien.php' ? 'aria-current="page"' : '' ?>>
+                    Pemantauan Pasien
+                </a>
+
+                <a
+                    href="<?= $nurseUrl ?>laporan.php"
+                    class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'laporan.php' ? 'active' : '' ?>"
+                    <?= $isNurseDirectory && $currentPage === 'laporan.php' ? 'aria-current="page"' : '' ?>>
+                    Laporan Keperawatan
                 </a>
 
                 <a
@@ -260,6 +318,7 @@ $homeUrl = '/rumah_sakit/index.php';
                     <?= $isMedicalRecordPage ? 'aria-current="page"' : '' ?>>
                     Rekam Medis
                 </a>
+
 
             </div>
         </div>
