@@ -34,16 +34,40 @@ function verifyAdminCsrfToken(): bool
         && hash_equals($_SESSION['admin_csrf_token'], $submittedToken);
 }
 
+
 function requireAdminLogin(): void
 {
     startAdminSession();
-    if (empty($_SESSION['admin_authenticated'])) {
-        header('Location: login.php');
+
+    if (
+        empty($_SESSION['admin_authenticated']) ||
+        ($_SESSION['account_role'] ?? '') !== 'admin'
+    ) {
+        header('Location: /rumah_sakit/admin/login.php');
         exit;
     }
 }
 
+function requireDoctorLogin(): void
+{
+    startAdminSession();
+
+    if (
+        empty($_SESSION['admin_authenticated']) ||
+        ($_SESSION['account_role'] ?? '') !== 'dokter' ||
+        empty($_SESSION['doctor_id'])
+    ) {
+        header('Location: /rumah_sakit/admin/login.php');
+        exit;
+    }
+}
+
+
 function escapeHtml(string $value): string
 {
-    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return htmlspecialchars(
+        $value,
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
 }
