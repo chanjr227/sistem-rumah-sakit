@@ -32,6 +32,7 @@ $isDoctorPage = $isDoctorDirectory && in_array(
         'data_dokter.php',
         'jadwal_dokter.php',
         'tambah_dokter.php',
+        'input_rekam_medis.php',
     ],
     true
 );
@@ -145,6 +146,13 @@ $homeUrl = '/rumah_sakit/index.php';
                     class="admin-submenu-link <?= $currentPage === 'tambah_dokter.php' && $isDoctorDirectory ? 'active' : '' ?>"
                     <?= $currentPage === 'tambah_dokter.php' && $isDoctorDirectory ? 'aria-current="page"' : '' ?>>
                     Tambah Dokter
+                </a>
+
+                <a
+                    href="<?= $doctorUrl ?>input_rekam_medis.php"
+                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'input_rekam_medis.php' ? 'active' : '' ?>"
+                    <?= $isDoctorDirectory && $currentPage === 'input_rekam_medis.php' ? 'aria-current="page"' : '' ?>>
+                    Input Rekam Medis
                 </a>
 
             </div>
