@@ -195,6 +195,10 @@ if (isset($_SESSION['akun_flash_success'])) {
     $successMessage = (string) $_SESSION['akun_flash_success'];
     unset($_SESSION['akun_flash_success']);
 }
+if (isset($_SESSION['akun_flash_error'])) {
+    $errorMessage = (string) $_SESSION['akun_flash_error'];
+    unset($_SESSION['akun_flash_error']);
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -819,6 +823,7 @@ $csrfToken = adminCsrfToken();
                                 <th>Jenis Akun</th>
                                 <th>Data Dokter</th>
                                 <th>Tanggal Dibuat</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
 
@@ -895,6 +900,43 @@ $csrfToken = adminCsrfToken();
                                         </td>
 
                                         <td><?= akunEscape($createdLabel) ?></td>
+
+                                        <td>
+                                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+
+                                                <a
+                                                    class="btn btn-secondary"
+                                                    href="edit_akun.php?id=<?= (int) $account['id'] ?>">
+                                                    Edit
+                                                </a>
+
+                                                <?php if ((int) $account['id'] !== (int) ($_SESSION['admin_id'] ?? 0)): ?>
+                                                    <form
+                                                        method="post"
+                                                        action="hapus_akun.php"
+                                                        onsubmit="return confirm('Yakin ingin menghapus akun ini? Tindakan ini tidak dapat dibatalkan.');">
+
+                                                        <input
+                                                            type="hidden"
+                                                            name="csrf_token"
+                                                            value="<?= akunEscape($csrfToken) ?>">
+
+                                                        <input
+                                                            type="hidden"
+                                                            name="id"
+                                                            value="<?= (int) $account['id'] ?>">
+
+                                                        <button
+                                                            class="btn btn-secondary"
+                                                            type="submit"
+                                                            style="color:#b42318;">
+                                                            Hapus
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+
+                                            </div>
+                                        </td>
 
                                     </tr>
 
