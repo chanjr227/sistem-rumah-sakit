@@ -83,6 +83,12 @@ $isDashboardPage = !$isPatientDirectory
     && !$isDoctorDirectory
     && $currentPage === 'index.php';
 
+// Deteksi halaman Pengaturan Akun
+$isSettingsPage = str_contains(
+    $currentScript,
+    '/admin/pengaturan/'
+);
+
 // URL navigasi
 $adminUrl = '/rumah_sakit/admin/';
 $doctorUrl = $adminUrl . 'dokter/';
@@ -257,6 +263,17 @@ $homeUrl = '/rumah_sakit/index.php';
 
             </div>
         </div>
+
+
+        <!-- PENGATURAN AKUN -->
+        <a
+            href="/rumah_sakit/admin/pengaturan/akun.php"
+            class="admin-nav-link <?= $isSettingsPage ? 'active' : '' ?>"
+            <?= $isSettingsPage ? 'aria-current="page"' : '' ?>>
+            <span class="admin-nav-icon">⚙</span>
+            <span>Pengaturan Akun</span>
+        </a>
+
 
     </nav>
 
