@@ -664,172 +664,12 @@
     min-height: calc(100vh - 68px);
   }
 
-  /* MENU UTAMA DENGAN SUBMENU */
-
-  .admin-nav-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .admin-nav-parent {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    min-height: 46px;
-    padding: 12px 14px;
-    border: 1px solid transparent;
-    border-radius: 11px;
-    background: transparent;
-    color: #c1d1da;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: left;
-    cursor: pointer;
-    transition:
-      background 0.2s ease,
-      color 0.2s ease;
-  }
-
-  .admin-nav-parent:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
-  }
-
-  .admin-nav-parent.active {
-    background: #087f8c;
-    color: #fff;
-  }
-
-  .admin-nav-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    flex-shrink: 0;
-    font-size: 17px;
-  }
-
-  .admin-nav-text {
-    flex: 1;
-  }
-
-  .admin-nav-arrow {
-    transition: transform 0.2s ease;
-  }
-
-  .admin-nav-group.open .admin-nav-arrow {
-    transform: rotate(180deg);
-  }
-
-  /* SUBMENU */
-
-  .admin-submenu {
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    padding: 4px 0 5px 38px;
-  }
-
-  .admin-nav-group.open .admin-submenu {
-    display: flex;
-  }
-
-  .admin-submenu-link {
-    display: block;
-    padding: 10px 12px;
-    border-left: 2px solid rgba(193, 209, 218, 0.25);
-    border-radius: 0 8px 8px 0;
-    color: #b8cbd4;
-    font-size: 12px;
-    line-height: 1.5;
-    transition:
-      background 0.2s ease,
-      color 0.2s ease;
-  }
-
-  .admin-submenu-link:hover,
-  .admin-submenu-link.active {
-    border-left-color: #62d9ff;
-    background: rgba(255, 255, 255, 0.07);
-    color: #fff;
-  }
-
-  @media (max-width: 760px) {
-    .admin-nav-parent {
-      min-height: 46px;
-    }
-
-    .admin-submenu-link {
-      padding-top: 11px;
-      padding-bottom: 11px;
-    }
-  }
-
-  .admin-sidebar-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .admin-sidebar-nav a,
-  .admin-sidebar-logout-button {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    color: #c1d1da;
-    text-decoration: none;
-    font-weight: 500;
-    border-radius: 10px;
-  }
-
-  .admin-sidebar-nav a:hover,
-  .admin-sidebar-nav a.active {
-    background: #087f8c;
-    color: #fff;
-  }
-
-  .admin-nav-parent {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 12px 14px;
-    border: none;
-    border-radius: 10px;
-    background: transparent;
-    color: #c1d1da;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .admin-nav-parent:hover,
-  .admin-nav-parent.active {
-    background: #087f8c;
-    color: #fff;
-  }
-
-  .admin-nav-text {
-    flex: 1;
-  }
-
-  .admin-submenu {
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    padding: 5px 0 5px 24px;
-  }
-
-  .admin-nav-group.open .admin-submenu {
-    display: flex;
-  }
-
-  .admin-submenu-link {
-    font-size: 13px;
+  .admin-page.sidebar-open::before {
+    position: fixed;
+    inset: 68px 0 0;
+    z-index: 80;
+    background: rgba(16, 42, 54, 0.48);
+    content: "";
   }
 
   .admin-sidebar {
@@ -838,15 +678,34 @@
     bottom: 0;
     left: 0;
     z-index: 90;
-    width: min(280px, 84vw);
+    width: min(320px, 88vw);
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 22px 14px max(24px, env(safe-area-inset-bottom));
     transform: translateX(-105%);
     visibility: hidden;
     transition:
       transform 0.25s ease,
       visibility 0.25s ease;
     box-shadow: 12px 0 35px rgba(0, 0, 0, 0.15);
+  }
+
+  .admin-sidebar-nav {
+    gap: 5px;
+  }
+
+  .admin-nav-parent {
+    min-height: 46px;
+  }
+
+  .admin-submenu {
+    padding-left: 32px;
+  }
+
+  .admin-submenu-link {
+    padding-top: 11px;
+    padding-bottom: 11px;
   }
 
   .admin-page.sidebar-open .admin-sidebar {
@@ -921,30 +780,6 @@
 
   .admin-form-actions .btn {
     width: 100%;
-  }
-}
-
-@media (max-width: 760px) {
-  .admin-sidebar {
-    position: fixed;
-    top: 68px;
-    bottom: 0;
-    left: 0;
-    z-index: 90;
-    width: min(280px, 84vw);
-    min-height: 0;
-    overflow-y: auto;
-    transform: translateX(-105%);
-    visibility: hidden;
-    transition:
-      transform 0.25s ease,
-      visibility 0.25s ease;
-    box-shadow: 12px 0 35px rgba(0, 0, 0, 0.15);
-  }
-
-  .admin-page.sidebar-open .admin-sidebar {
-    transform: translateX(0);
-    visibility: visible;
   }
 }
 

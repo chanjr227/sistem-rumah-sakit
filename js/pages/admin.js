@@ -79,9 +79,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!button) return;
 
-    // Submenu Dokter terbuka otomatis pada halaman dashboard dokter.
-    group.classList.add("open");
-    button.setAttribute("aria-expanded", "true");
+    button.setAttribute(
+      "aria-expanded",
+      String(group.classList.contains("open")),
+    );
 
     button.addEventListener("click", () => {
       const isOpen = group.classList.toggle("open");
