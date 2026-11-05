@@ -1,9 +1,7 @@
 <?php
 require_once __DIR__ . '/../auth.php';
 $csrfToken = adminCsrfToken();
-$logoutAction = basename($_SERVER['PHP_SELF'] ?? '') === 'tambah_dokter.php'
-    ? '../logout.php'
-    : 'logout.php';
+$logoutAction = '/rumah_sakit/admin/logout.php';
 ?>
 
 <header class="admin-header">
