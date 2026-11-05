@@ -46,7 +46,10 @@ $isDoctorPage = $isDoctorDirectory && in_array(
         'data_dokter.php',
         'jadwal_dokter.php',
         'tambah_dokter.php',
+        'pemeriksaan_pasien.php',
         'input_rekam_medis.php',
+        'resep_obat.php',
+        'laporan_pemeriksaan.php',
     ],
     true
 );
@@ -137,6 +140,7 @@ $isSettingsPage = str_contains(
             <span>Dashboard</span>
         </a>
 
+
         <!-- DOKTER -->
         <div
             class="admin-nav-group <?= $isDoctorPage ? 'open' : '' ?>"
@@ -158,23 +162,30 @@ $isSettingsPage = str_contains(
 
                 <a
                     href="<?= $doctorUrl ?>data_dokter.php"
-                    class="admin-submenu-link <?= $currentPage === 'data_dokter.php' && $isDoctorDirectory ? 'active' : '' ?>"
-                    <?= $currentPage === 'data_dokter.php' && $isDoctorDirectory ? 'aria-current="page"' : '' ?>>
+                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'data_dokter.php' ? 'active' : '' ?>"
+                    <?= $isDoctorDirectory && $currentPage === 'data_dokter.php' ? 'aria-current="page"' : '' ?>>
                     Data Dokter
                 </a>
 
                 <a
                     href="<?= $doctorUrl ?>jadwal_dokter.php"
-                    class="admin-submenu-link <?= $currentPage === 'jadwal_dokter.php' && $isDoctorDirectory ? 'active' : '' ?>"
-                    <?= $currentPage === 'jadwal_dokter.php' && $isDoctorDirectory ? 'aria-current="page"' : '' ?>>
+                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'jadwal_dokter.php' ? 'active' : '' ?>"
+                    <?= $isDoctorDirectory && $currentPage === 'jadwal_dokter.php' ? 'aria-current="page"' : '' ?>>
                     Jadwal Dokter
                 </a>
 
                 <a
                     href="<?= $doctorUrl ?>tambah_dokter.php"
-                    class="admin-submenu-link <?= $currentPage === 'tambah_dokter.php' && $isDoctorDirectory ? 'active' : '' ?>"
-                    <?= $currentPage === 'tambah_dokter.php' && $isDoctorDirectory ? 'aria-current="page"' : '' ?>>
+                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>"
+                    <?= $isDoctorDirectory && $currentPage === 'tambah_dokter.php' ? 'aria-current="page"' : '' ?>>
                     Tambah Dokter
+                </a>
+
+                <a
+                    href="<?= $doctorUrl ?>pemeriksaan_pasien.php"
+                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'pemeriksaan_pasien.php' ? 'active' : '' ?>"
+                    <?= $isDoctorDirectory && $currentPage === 'pemeriksaan_pasien.php' ? 'aria-current="page"' : '' ?>>
+                    Pemeriksaan Pasien
                 </a>
 
                 <a
@@ -184,8 +195,24 @@ $isSettingsPage = str_contains(
                     Input Rekam Medis
                 </a>
 
+                <a
+                    href="<?= $doctorUrl ?>resep_obat.php"
+                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'resep_obat.php' ? 'active' : '' ?>"
+                    <?= $isDoctorDirectory && $currentPage === 'resep_obat.php' ? 'aria-current="page"' : '' ?>>
+                    Resep Obat
+                </a>
+
+                <a
+                    href="<?= $doctorUrl ?>laporan_pemeriksaan.php"
+                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'laporan_pemeriksaan.php' ? 'active' : '' ?>"
+                    <?= $isDoctorDirectory && $currentPage === 'laporan_pemeriksaan.php' ? 'aria-current="page"' : '' ?>>
+                    Laporan Pemeriksaan
+                </a>
+
             </div>
         </div>
+
+
 
         <!-- FARMASI -->
         <div
