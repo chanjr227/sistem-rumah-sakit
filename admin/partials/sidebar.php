@@ -278,13 +278,6 @@ $isSettingsPage = str_contains(
                 </a>
 
                 <a
-                    href="<?= $nurseUrl ?>pemeriksaan.php"
-                    class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'pemeriksaan.php' ? 'active' : '' ?>"
-                    <?= $isNurseDirectory && $currentPage === 'pemeriksaan.php' ? 'aria-current="page"' : '' ?>>
-                    Pemeriksaan Pasien
-                </a>
-
-                <a
                     href="<?= $nurseUrl ?>catatan_keperawatan.php"
                     class="admin-submenu-link <?= $isNurseDirectory && $currentPage === 'catatan_keperawatan.php' ? 'active' : '' ?>"
                     <?= $isNurseDirectory && $currentPage === 'catatan_keperawatan.php' ? 'aria-current="page"' : '' ?>>
