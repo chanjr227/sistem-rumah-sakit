@@ -3,6 +3,17 @@
 declare(strict_types=1);
 
 $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
+$accountRole = $_SESSION['account_role'] ?? '';
+$isAdmin = $accountRole === 'admin';
+$isDoctor = $accountRole === 'dokter';
+$isNurse = $accountRole === 'perawat';
+$isPharmacy = $accountRole === 'farmasi';
+$sidebarLabel = match ($accountRole) {
+    'dokter' => 'Menu Dokter',
+    'perawat' => 'Menu Perawat',
+    'farmasi' => 'Menu Farmasi',
+    default => 'Menu Admin',
+};
 
 $currentScript = str_replace(
     '\\',
@@ -126,10 +137,11 @@ $isSettingsPage = str_contains(
 
 <aside class="admin-sidebar" id="adminSidebar">
 
-    <p class="admin-sidebar-label">Menu Admin</p>
+    <p class="admin-sidebar-label"><?= $sidebarLabel ?></p>
 
     <nav class="admin-sidebar-nav" aria-label="Navigasi dashboard admin">
 
+        <?php if ($isAdmin): ?>
         <!-- DASHBOARD -->
         <a
             href="<?= $adminUrl ?>index.php#dashboard"
@@ -139,8 +151,10 @@ $isSettingsPage = str_contains(
             <span class="admin-nav-icon">⌂</span>
             <span>Dashboard</span>
         </a>
+        <?php endif; ?>
 
 
+        <?php if ($isAdmin || $isDoctor): ?>
         <!-- DOKTER -->
         <div
             class="admin-nav-group <?= $isDoctorPage ? 'open' : '' ?>"
@@ -160,26 +174,28 @@ $isSettingsPage = str_contains(
 
             <div class="admin-submenu" id="doctorSubmenu">
 
-                <a
-                    href="<?= $doctorUrl ?>data_dokter.php"
-                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'data_dokter.php' ? 'active' : '' ?>"
-                    <?= $isDoctorDirectory && $currentPage === 'data_dokter.php' ? 'aria-current="page"' : '' ?>>
-                    Data Dokter
-                </a>
+                <?php if ($isAdmin): ?>
+                    <a
+                        href="<?= $doctorUrl ?>data_dokter.php"
+                        class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'data_dokter.php' ? 'active' : '' ?>"
+                        <?= $isDoctorDirectory && $currentPage === 'data_dokter.php' ? 'aria-current="page"' : '' ?>>
+                        Data Dokter
+                    </a>
 
-                <a
-                    href="<?= $doctorUrl ?>jadwal_dokter.php"
-                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'jadwal_dokter.php' ? 'active' : '' ?>"
-                    <?= $isDoctorDirectory && $currentPage === 'jadwal_dokter.php' ? 'aria-current="page"' : '' ?>>
-                    Jadwal Dokter
-                </a>
+                    <a
+                        href="<?= $doctorUrl ?>jadwal_dokter.php"
+                        class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'jadwal_dokter.php' ? 'active' : '' ?>"
+                        <?= $isDoctorDirectory && $currentPage === 'jadwal_dokter.php' ? 'aria-current="page"' : '' ?>>
+                        Jadwal Dokter
+                    </a>
 
-                <a
-                    href="<?= $doctorUrl ?>tambah_dokter.php"
-                    class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>"
-                    <?= $isDoctorDirectory && $currentPage === 'tambah_dokter.php' ? 'aria-current="page"' : '' ?>>
-                    Tambah Dokter
-                </a>
+                    <a
+                        href="<?= $doctorUrl ?>tambah_dokter.php"
+                        class="admin-submenu-link <?= $isDoctorDirectory && $currentPage === 'tambah_dokter.php' ? 'active' : '' ?>"
+                        <?= $isDoctorDirectory && $currentPage === 'tambah_dokter.php' ? 'aria-current="page"' : '' ?>>
+                        Tambah Dokter
+                    </a>
+                <?php endif; ?>
 
                 <a
                     href="<?= $doctorUrl ?>pemeriksaan_pasien.php"
@@ -211,9 +227,11 @@ $isSettingsPage = str_contains(
 
             </div>
         </div>
+        <?php endif; ?>
 
 
 
+        <?php if ($isAdmin || $isPharmacy): ?>
         <!-- FARMASI -->
         <div
             class="admin-nav-group <?= $isPharmacyPage ? 'open' : '' ?>"
@@ -240,6 +258,7 @@ $isSettingsPage = str_contains(
                     Data Obat
                 </a>
 
+                <?php if ($isAdmin || $isPharmacy): ?>
                 <a
                     href="<?= $pharmacyUrl ?>transaksi_stok.php?jenis=masuk"
                     class="admin-submenu-link <?= $currentPage === 'transaksi_stok.php' && ($_GET['jenis'] ?? 'masuk') === 'masuk' && $isPharmacyDirectory ? 'active' : '' ?>"
@@ -267,11 +286,14 @@ $isSettingsPage = str_contains(
                     <?= $currentPage === 'laporan_farmasi.php' && $isPharmacyDirectory ? 'aria-current="page"' : '' ?>>
                     Laporan Farmasi
                 </a>
+                <?php endif; ?>
 
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- PERAWAT -->
+        <?php if ($isAdmin || $isNurse): ?>
         <div
             class="admin-nav-group <?= $isNursePage ? 'open' : '' ?>"
             data-nav-group>
@@ -342,8 +364,10 @@ $isSettingsPage = str_contains(
 
             </div>
         </div>
+        <?php endif; ?>
 
 
+        <?php if ($isAdmin): ?>
         <!-- PENGATURAN AKUN -->
         <a
             href="/rumah_sakit/admin/pengaturan/akun.php"
@@ -352,6 +376,7 @@ $isSettingsPage = str_contains(
             <span class="admin-nav-icon">⚙</span>
             <span>Pengaturan Akun</span>
         </a>
+        <?php endif; ?>
 
 
     </nav>
