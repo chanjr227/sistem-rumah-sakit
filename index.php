@@ -393,14 +393,16 @@ try {
             <input type="email" name="email" placeholder="Masukkan email Anda" required />
           </label>
           <label>
-            Poli tujuan
-            <select name="specialty" required>
-              <option value="">Pilih poli</option>
-              <option>Poli Umum</option>
-              <option>Kesehatan Anak</option>
-              <option>Jantung</option>
-              <option>Neurologi</option>
-              <option>Laboratorium</option>
+            Dokter pilihan
+            <select name="doctor_id" required>
+              <option value="">Pilih dokter</option>
+              <?php foreach ($doctors as $doctor): ?>
+                <?php if ($doctor['status'] === 'available'): ?>
+                  <option value="<?= (int) $doctor['id'] ?>">
+                    <?= $escape($doctor['name']) ?> — <?= $escape($doctor['specialty']) ?>
+                  </option>
+                <?php endif; ?>
+              <?php endforeach; ?>
             </select>
           </label>
           <label>
