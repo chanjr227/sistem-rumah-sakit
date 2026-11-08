@@ -12,6 +12,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 $connection = getDatabaseConnection();
+$doctorId = (int) $_SESSION['doctor_id'];
 
 function pemeriksaanEscape(mixed $value): string
 {
@@ -31,25 +32,31 @@ $selectedPatient = (int) ($_GET['patient_id'] ?? 0);
 // Ambil daftar pasien
 try {
     $sql = "
-        SELECT
-            id,
-            name,
-            medical_record_number
-        FROM patients
+        SELECT p.id, p.name, p.medical_record_number
+        FROM patients p
+        WHERE EXISTS (
+            SELECT 1
+            FROM appointments a
+            WHERE a.patient_id = p.id
+              AND a.doctor_id = :doctor_id
+              AND a.status IN ('pending', 'confirmed')
+        )
     ";
 
-    $params = [];
+    $params = ['doctor_id' => $doctorId];
 
     if ($search !== '') {
         $sql .= "
-            WHERE name LIKE :search
-            OR medical_record_number LIKE :search
+            AND (
+                p.name LIKE :search
+                OR p.medical_record_number LIKE :search
+            )
         ";
 
         $params['search'] = '%' . $search . '%';
     }
 
-    $sql .= " ORDER BY name ASC";
+    $sql .= " ORDER BY p.name ASC";
 
     $stmt = $connection->prepare($sql);
     $stmt->execute($params);
@@ -65,18 +72,28 @@ $patient = null;
 
 if ($selectedPatient > 0) {
     try {
-        $stmt = $connection->prepare("
-            SELECT id, name, medical_record_number
-            FROM patients
-            WHERE id = :id
-            LIMIT 1
-        ");
+        $stmt = $connection->prepare(
+            "SELECT p.id, p.name, p.medical_record_number
+             FROM patients p
+             WHERE p.id = :patient_id
+               AND EXISTS (
+                   SELECT 1
+                   FROM appointments a
+                   WHERE a.patient_id = p.id
+                     AND a.doctor_id = :doctor_id
+                     AND a.status IN ('pending', 'confirmed')
+               )
+             LIMIT 1"
+        );
 
-        $stmt->execute(['id' => $selectedPatient]);
+        $stmt->execute([
+            'patient_id' => $selectedPatient,
+            'doctor_id' => $doctorId,
+        ]);
         $patient = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$patient) {
-            $errors[] = 'Data pasien tidak ditemukan.';
+            $errors[] = 'Pasien tidak ditemukan atau tidak terdaftar pada dokter Anda.';
         }
     } catch (PDOException $e) {
         $errors[] = 'Gagal mengambil detail pasien.';
@@ -130,14 +147,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Pastikan pasien benar-benar tersedia
     if (!$errors) {
-        $checkPatient = $connection->prepare("
-            SELECT id FROM patients WHERE id = :id LIMIT 1
-        ");
+        $checkPatient = $connection->prepare(
+            "SELECT p.id
+             FROM patients p
+             WHERE p.id = :patient_id
+               AND EXISTS (
+                   SELECT 1
+                   FROM appointments a
+                   WHERE a.patient_id = p.id
+                     AND a.doctor_id = :doctor_id
+                     AND a.status IN ('pending', 'confirmed')
+               )
+             LIMIT 1"
+        );
 
-        $checkPatient->execute(['id' => $patientId]);
+        $checkPatient->execute([
+            'patient_id' => $patientId,
+            'doctor_id' => $doctorId,
+        ]);
 
         if (!$checkPatient->fetch()) {
-            $errors[] = 'Pasien tidak ditemukan dalam database.';
+            $errors[] = 'Pasien tidak ditemukan atau tidak terdaftar pada dokter Anda.';
         }
     }
 
@@ -197,14 +227,24 @@ if (isset($_GET['success'])) {
 
 // Ambil kembali pasien terpilih jika belum tersedia
 if ($selectedPatient > 0 && !$patient) {
-    $stmt = $connection->prepare("
-        SELECT id, name, medical_record_number
-        FROM patients
-        WHERE id = :id
-        LIMIT 1
-    ");
+    $stmt = $connection->prepare(
+        "SELECT p.id, p.name, p.medical_record_number
+         FROM patients p
+         WHERE p.id = :patient_id
+           AND EXISTS (
+               SELECT 1
+               FROM appointments a
+               WHERE a.patient_id = p.id
+                 AND a.doctor_id = :doctor_id
+                 AND a.status IN ('pending', 'confirmed')
+           )
+         LIMIT 1"
+    );
 
-    $stmt->execute(['id' => $selectedPatient]);
+    $stmt->execute([
+        'patient_id' => $selectedPatient,
+        'doctor_id' => $doctorId,
+    ]);
     $patient = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
 }
 

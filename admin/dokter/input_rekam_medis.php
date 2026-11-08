@@ -13,14 +13,14 @@ function inputRekamEscape(mixed $value): string
 }
 
 $connection = getDatabaseConnection();
+$doctorId = (int) $_SESSION['doctor_id'];
 
 $patients = [];
-$doctors = [];
+$doctor = null;
 $errorMessage = null;
 $successMessage = null;
 
 $patientId = '';
-$doctorId = '';
 $visitDate = date('Y-m-d');
 $complaint = '';
 $diagnosis = '';
@@ -35,18 +35,26 @@ $allowedStatuses = [
 ];
 
 try {
-    $patients = $connection->query(
-        'SELECT id, name, medical_record_number
-         FROM patients
-         ORDER BY name ASC'
-    )->fetchAll(PDO::FETCH_ASSOC);
+    $patientStatement = $connection->prepare(
+        "SELECT p.id, p.name, p.medical_record_number
+         FROM patients p
+         WHERE EXISTS (
+             SELECT 1
+             FROM appointments a
+             WHERE a.patient_id = p.id
+               AND a.doctor_id = :doctor_id
+               AND a.status IN ('pending', 'confirmed')
+         )
+         ORDER BY p.name ASC"
+    );
+    $patientStatement->execute(['doctor_id' => $doctorId]);
+    $patients = $patientStatement->fetchAll(PDO::FETCH_ASSOC);
 
-    $doctors = $connection->query(
-        "SELECT id, name, specialty
-         FROM doctors
-         WHERE status = 'available'
-         ORDER BY name ASC"
-    )->fetchAll(PDO::FETCH_ASSOC);
+    $doctorStatement = $connection->prepare(
+        'SELECT id, name, specialty FROM doctors WHERE id = :id LIMIT 1'
+    );
+    $doctorStatement->execute(['id' => $doctorId]);
+    $doctor = $doctorStatement->fetch(PDO::FETCH_ASSOC) ?: null;
 } catch (PDOException $exception) {
     error_log('Load medical record form error: ' . $exception->getMessage());
     $errorMessage = 'Data pasien atau dokter gagal dimuat. Periksa struktur tabel.';
@@ -54,7 +62,6 @@ try {
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $patientId = trim((string) ($_POST['patient_id'] ?? ''));
-    $doctorId = trim((string) ($_POST['doctor_id'] ?? ''));
     $visitDate = trim((string) ($_POST['visit_date'] ?? ''));
     $complaint = trim((string) ($_POST['complaint'] ?? ''));
     $diagnosis = trim((string) ($_POST['diagnosis'] ?? ''));
@@ -63,11 +70,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
     if (
         !ctype_digit($patientId)
-        || !ctype_digit($doctorId)
         || (int) $patientId < 1
-        || (int) $doctorId < 1
     ) {
-        $errorMessage = 'Pilih pasien dan dokter yang valid.';
+        $errorMessage = 'Pilih pasien yang valid.';
     } elseif (
         !preg_match('/^\d{4}-\d{2}-\d{2}$/', $visitDate)
         || !checkdate(
@@ -86,20 +91,25 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     } else {
         try {
             $patientCheck = $connection->prepare(
-                'SELECT id FROM patients WHERE id = :id'
+                "SELECT p.id
+                 FROM patients p
+                 WHERE p.id = :patient_id
+                   AND EXISTS (
+                       SELECT 1
+                       FROM appointments a
+                       WHERE a.patient_id = p.id
+                         AND a.doctor_id = :doctor_id
+                         AND a.status IN ('pending', 'confirmed')
+                   )
+                 LIMIT 1"
             );
-            $patientCheck->execute(['id' => (int) $patientId]);
-
-            $doctorCheck = $connection->prepare(
-                "SELECT id FROM doctors
-                 WHERE id = :id AND status = 'available'"
-            );
-            $doctorCheck->execute(['id' => (int) $doctorId]);
+            $patientCheck->execute([
+                'patient_id' => (int) $patientId,
+                'doctor_id' => $doctorId,
+            ]);
 
             if (!$patientCheck->fetchColumn()) {
-                $errorMessage = 'Pasien tidak ditemukan.';
-            } elseif (!$doctorCheck->fetchColumn()) {
-                $errorMessage = 'Dokter tidak ditemukan atau tidak aktif.';
+                $errorMessage = 'Pasien tidak ditemukan atau tidak terdaftar pada dokter Anda.';
             } else {
                 $insert = $connection->prepare(
                     'INSERT INTO patient_visits (
@@ -134,7 +144,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $successMessage = 'Rekam medis berhasil disimpan.';
 
                 $patientId = '';
-                $doctorId = '';
                 $visitDate = date('Y-m-d');
                 $complaint = '';
                 $diagnosis = '';
@@ -298,7 +307,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
             <div class="rekam-info">
                 <strong>Petunjuk:</strong>
-                pilih pasien dan dokter, lalu lengkapi keluhan, diagnosis,
+                pilih pasien yang membuat janji dengan Anda, lalu lengkapi keluhan, diagnosis,
                 serta catatan pemeriksaan. Data akan tersimpan pada riwayat
                 kunjungan pasien.
             </div>
@@ -327,20 +336,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     </div>
 
                     <div class="rekam-field">
-                        <label for="doctor_id">Dokter Pemeriksa *</label>
-
-                        <select id="doctor_id" name="doctor_id" required>
-                            <option value="">-- Pilih Dokter --</option>
-
-                            <?php foreach ($doctors as $doctor): ?>
-                                <option
-                                    value="<?= (int) $doctor['id'] ?>"
-                                    <?= $doctorId === (string) $doctor['id'] ? 'selected' : '' ?>>
-                                    <?= inputRekamEscape($doctor['name']) ?>
-                                    - <?= inputRekamEscape($doctor['specialty']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <label>Dokter Pemeriksa</label>
+                        <input
+                            type="text"
+                            value="<?= inputRekamEscape(
+                                $doctor
+                                    ? $doctor['name'] . ' - ' . $doctor['specialty']
+                                    : 'Dokter tidak ditemukan'
+                            ) ?>"
+                            readonly>
                     </div>
 
                     <div class="rekam-field">

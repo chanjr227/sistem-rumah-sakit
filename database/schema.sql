@@ -29,26 +29,6 @@ CREATE TABLE IF NOT EXISTS admins (
   DEFAULT CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS appointments (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  patient_id BIGINT UNSIGNED NULL,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(254) NOT NULL,
-  specialty VARCHAR(100) NOT NULL,
-  visit_date DATE NOT NULL,
-  status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_appointments_patient_id (patient_id),
-  KEY idx_appointments_visit_date (visit_date),
-  KEY idx_appointments_specialty (specialty),
-  CONSTRAINT fk_appointments_patient
-    FOREIGN KEY (patient_id) REFERENCES patients (id)
-    ON DELETE SET NULL
-) ENGINE=InnoDB
-  DEFAULT CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
 CREATE TABLE IF NOT EXISTS doctors (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(255) NOT NULL,
@@ -63,6 +43,31 @@ CREATE TABLE IF NOT EXISTS doctors (
   PRIMARY KEY (id),
   KEY idx_doctors_specialty (specialty),
   KEY idx_doctors_status (status)
+) ENGINE=InnoDB
+  DEFAULT CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS appointments (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  patient_id BIGINT UNSIGNED NULL,
+  doctor_id BIGINT UNSIGNED NULL,
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(254) NOT NULL,
+  specialty VARCHAR(100) NOT NULL,
+  visit_date DATE NOT NULL,
+  status ENUM('pending', 'confirmed', 'cancelled') NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_appointments_patient_id (patient_id),
+  KEY idx_appointments_doctor_id (doctor_id),
+  KEY idx_appointments_visit_date (visit_date),
+  KEY idx_appointments_specialty (specialty),
+  CONSTRAINT fk_appointments_patient
+    FOREIGN KEY (patient_id) REFERENCES patients (id)
+    ON DELETE SET NULL,
+  CONSTRAINT fk_appointments_doctor
+    FOREIGN KEY (doctor_id) REFERENCES doctors (id)
+    ON DELETE SET NULL
 ) ENGINE=InnoDB
   DEFAULT CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;

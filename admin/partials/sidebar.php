@@ -88,6 +88,7 @@ $isPharmacyPage = $isPharmacyDirectory && in_array(
         'tambah_obat.php',
         'edit_obat.php',
         'transaksi_stok.php',
+        'resep_masuk.php',
         'obat_kedaluwarsa.php',
         'laporan_farmasi.php',
     ],
@@ -256,6 +257,13 @@ $isSettingsPage = str_contains(
                     class="admin-submenu-link <?= $currentPage === 'data_obat.php' && $isPharmacyDirectory ? 'active' : '' ?>"
                     <?= $currentPage === 'data_obat.php' && $isPharmacyDirectory ? 'aria-current="page"' : '' ?>>
                     Data Obat
+                </a>
+
+                <a
+                    href="<?= $pharmacyUrl ?>resep_masuk.php"
+                    class="admin-submenu-link <?= $currentPage === 'resep_masuk.php' && $isPharmacyDirectory ? 'active' : '' ?>"
+                    <?= $currentPage === 'resep_masuk.php' && $isPharmacyDirectory ? 'aria-current="page"' : '' ?>>
+                    Resep Masuk
                 </a>
 
                 <?php if ($isAdmin || $isPharmacy): ?>
